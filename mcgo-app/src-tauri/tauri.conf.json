@@ -5,18 +5,25 @@
   "build": {
     "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build",
-    "devUrl": "http://localhost:1420",
+    "devUrl": "http://localhost:5174",
     "frontendDist": "../dist"
   },
   "app": {
     "windows": [
       {
-        "title": "CloudPlay 云玩 - 局域网游戏远程联机",
-        "width": 900,
-        "height": 700,
+        "label": "main",
+        "title": "CloudPlay",
+        "width": 920,
+        "height": 720,
+        "minWidth": 720,
+        "minHeight": 520,
         "resizable": true,
         "fullscreen": false,
-        "center": true
+        "center": true,
+        "decorations": false,
+        "transparent": false,
+        "shadow": true,
+        "visible": true
       }
     ],
     "security": {

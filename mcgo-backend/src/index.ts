@@ -13,7 +13,17 @@ const app = new Hono<{ Bindings: Bindings }>();
 
 // CORS configuration
 app.use('*', cors({
-  origin: ['https://cloudplay.lat', 'https://www.cloudplay.lat', 'http://localhost:1420', 'tauri://localhost'],
+  origin: [
+    'https://cloudplay.lat',
+    'https://www.cloudplay.lat',
+    'http://localhost:1420',
+    'http://localhost:5174',
+    'http://127.0.0.1:5174',
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'tauri://localhost',
+    'http://tauri.localhost',
+  ],
   allowMethods: ['POST', 'GET', 'OPTIONS'],
   allowHeaders: ['Content-Type'],
   maxAge: 86400,

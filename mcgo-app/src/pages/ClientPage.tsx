@@ -1,159 +1,203 @@
-import { useState, useCallback } from 'react';
+import { FormEvent, useCallback, useMemo, useState } from 'react';
+import { Loader2, Wifi, WifiOff } from 'lucide-react';
 import { useAppStore } from '../store';
-import { Loader2, Wifi, WifiOff, Users } from 'lucide-react';
+import {
+  normalizeServerAddress,
+  validatePort,
+  validateServerAddress,
+} from '../lib/validation';
+import { Button } from '../components/ui/Button';
+import { Input } from '../components/ui/Input';
+import { CopyField } from '../components/ui/CopyField';
 
 export function ClientPage() {
-  const { tunnelStatus, setTunnelStatus, setError, localPort, setLocalPort } = useAppStore();
+  const tunnelStatus = useAppStore((s) => s.tunnelStatus);
+  const error = useAppStore((s) => s.error);
+  const clientPort = useAppStore((s) => s.clientPort);
+  const setTunnelStatus = useAppStore((s) => s.setTunnelStatus);
+  const setError = useAppStore((s) => s.setError);
+  const setClientPort = useAppStore((s) => s.setClientPort);
+  const setHostname = useAppStore((s) => s.setHostname);
+
   const [serverAddress, setServerAddress] = useState('');
-  const [connectPort, setConnectPort] = useState(25566);
+  const [fieldErrors, setFieldErrors] = useState<{
+    address?: string | null;
+    port?: string | null;
+  }>({});
+
+  const busy = tunnelStatus === 'running' || tunnelStatus === 'connecting';
+  const localTarget = useMemo(
+    () => `localhost:${clientPort || 25566}`,
+    [clientPort],
+  );
 
   const handleConnect = useCallback(async () => {
-    if (!serverAddress.trim()) {
-      setError('请输入服务器地址');
+    const a = validateServerAddress(serverAddress);
+    const p = validatePort(clientPort);
+    setFieldErrors({ address: a, port: p });
+    if (a || p) {
+      setError(a || p);
       setTunnelStatus('error');
       return;
     }
-
+    const host = normalizeServerAddress(serverAddress);
+    setHostname(host);
     setTunnelStatus('connecting');
     setError(null);
-
-    // Simulate connection for demo - in real app, this would call Tauri backend
-    setTimeout(() => {
-      setTunnelStatus('running');
-    }, 1500);
-  }, [serverAddress, setTunnelStatus, setError]);
+    await new Promise((r) => setTimeout(r, 900));
+    setTunnelStatus('running');
+  }, [serverAddress, clientPort, setHostname, setTunnelStatus, setError]);
 
   const handleDisconnect = useCallback(() => {
     setTunnelStatus('idle');
     setError(null);
-  }, [setTunnelStatus, setError]);
+    setHostname(null);
+  }, [setTunnelStatus, setError, setHostname]);
+
+  const onSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    if (tunnelStatus === 'running') handleDisconnect();
+    else if (tunnelStatus !== 'connecting') void handleConnect();
+  };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <div className="card">
-        <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
-          <div className="w-10 h-10 bg-blue-600/20 rounded-lg flex items-center justify-center">
-            <Users className="text-blue-500" size={20} />
-          </div>
-          联机者模式
-        </h2>
+    <div className="mx-auto w-full max-w-lg">
+      <header className="mb-6">
+        <p
+          className="text-2xs font-medium uppercase tracking-[0.16em]"
+          style={{ color: 'var(--green)' }}
+        >
+          Join mode
+        </p>
+        <h2 className="mt-1 text-xl font-semibold tracking-tight">联机</h2>
+        <p className="mt-1 text-sm" style={{ color: 'var(--mute)' }}>
+          输入好友分享的地址并接入
+        </p>
+      </header>
 
-        <div className="space-y-4">
-          {/* Server Address Input */}
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              服务器地址
-            </label>
-            <input
-              type="text"
-              value={serverAddress}
-              onChange={(e) => setServerAddress(e.target.value)}
-              placeholder="例如: john123.cloudplay.lat"
-              className="input-field"
-              disabled={tunnelStatus === 'running' || tunnelStatus === 'connecting'}
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              输入开服者分享的地址
-            </p>
-          </div>
+      <form onSubmit={onSubmit} className="surface p-5 space-y-4">
+        <Input
+          name="serverAddress"
+          label="服务器地址"
+          value={serverAddress}
+          onChange={(e) => {
+            setServerAddress(e.target.value);
+            setFieldErrors((f) => ({
+              ...f,
+              address: e.target.value.trim()
+                ? validateServerAddress(e.target.value)
+                : null,
+            }));
+          }}
+          onBlur={() => {
+            const n = normalizeServerAddress(serverAddress);
+            if (n && n !== serverAddress) setServerAddress(n);
+          }}
+          placeholder="room.cloudplay.lat"
+          disabled={busy}
+          autoComplete="off"
+          spellCheck={false}
+          error={fieldErrors.address}
+          hint="支持粘贴完整链接，会自动整理"
+        />
 
-          {/* Local Port Input */}
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              本地端口
-            </label>
-            <input
-              type="number"
-              value={connectPort}
-              onChange={(e) => setConnectPort(parseInt(e.target.value) || 25566)}
-              placeholder="25566"
-              className="input-field"
-              disabled={tunnelStatus === 'running' || tunnelStatus === 'connecting'}
-              min={1}
-              max={65535}
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              本地代理端口（默认 25566，避免与服务器端口冲突）
-            </p>
-          </div>
+        <Input
+          name="clientPort"
+          label="本地代理端口"
+          type="number"
+          value={clientPort || ''}
+          onChange={(e) => {
+            const p = parseInt(e.target.value, 10);
+            if (Number.isNaN(p)) {
+              setClientPort(0);
+              setFieldErrors((f) => ({ ...f, port: '无效端口' }));
+              return;
+            }
+            setClientPort(p);
+            setFieldErrors((f) => ({ ...f, port: validatePort(p) }));
+          }}
+          disabled={busy}
+          min={1}
+          max={65535}
+          error={fieldErrors.port}
+          hint="默认 25566，避免与本机服务冲突"
+        />
 
-          {/* Action Button */}
-          <div className="pt-2">
-            {tunnelStatus === 'idle' || tunnelStatus === 'error' ? (
-              <button
-                onClick={handleConnect}
-                className="btn-primary w-full flex items-center justify-center gap-2"
-              >
-                <Wifi size={18} />
-                连接游戏
-              </button>
-            ) : tunnelStatus === 'connecting' ? (
-              <button
-                disabled
-                className="btn-primary w-full flex items-center justify-center gap-2 opacity-75"
-              >
-                <Loader2 size={18} className="animate-spin" />
-                连接中...
-              </button>
-            ) : (
-              <button
-                onClick={handleDisconnect}
-                className="btn-danger w-full flex items-center justify-center gap-2"
-              >
-                <WifiOff size={18} />
-                断开连接
-              </button>
-            )}
-          </div>
+        <div className="pt-1">
+          {tunnelStatus === 'running' ? (
+            <Button type="submit" variant="danger" fullWidth>
+              <WifiOff size={15} />
+              断开
+            </Button>
+          ) : (
+            <Button
+              type="submit"
+              variant="solid"
+              fullWidth
+              loading={tunnelStatus === 'connecting'}
+              disabled={!!fieldErrors.address || !!fieldErrors.port}
+            >
+              {tunnelStatus === 'connecting' ? (
+                <>
+                  <Loader2 size={15} className="animate-spin" />
+                  连接中…
+                </>
+              ) : (
+                <>
+                  <Wifi size={15} />
+                  连接
+                </>
+              )}
+            </Button>
+          )}
         </div>
-      </div>
+      </form>
 
-      {/* Connection Success */}
       {tunnelStatus === 'running' && (
-        <div className="card border-blue-600/50 bg-blue-900/20">
-          <h3 className="text-lg font-semibold text-blue-400 mb-2">
-            ✓ 已连接
-          </h3>
-          <p className="text-gray-300 mb-4">
-            隧道已建立，请在 游戏中连接以下地址：
+        <section
+          className="surface mt-4 p-5"
+          style={{
+            borderColor: 'color-mix(in srgb, var(--green) 35%, var(--line))',
+            background: 'color-mix(in srgb, var(--green) 6%, transparent)',
+          }}
+        >
+          <p
+            className="text-2xs uppercase tracking-wider"
+            style={{ color: 'var(--green)' }}
+          >
+            Connected
           </p>
-          <div className="bg-gray-800 px-4 py-3 rounded-lg">
-            <code className="text-blue-300 font-mono text-lg">
-              localhost:{connectPort}
-            </code>
+          <p className="mt-1 text-sm" style={{ color: 'var(--mute)' }}>
+            在游戏中添加服务器
+          </p>
+          <div className="mt-3">
+            <CopyField value={localTarget} />
           </div>
-          <div className="mt-4 p-3 bg-gray-800/50 rounded-lg">
-            <p className="text-sm text-gray-400">
-              💡 提示：打开游戏，选择"多人游戏"，添加服务器，输入上面的地址即可
-            </p>
-          </div>
-        </div>
+        </section>
       )}
 
-      {/* Instructions */}
-      <div className="card bg-gray-900/50">
-        <h3 className="text-lg font-semibold mb-4">使用说明</h3>
-        <ol className="space-y-3 text-sm text-gray-400">
-          <li className="flex items-start gap-3">
-            <span className="flex-shrink-0 w-6 h-6 bg-gray-800 rounded-full flex items-center justify-center text-xs font-medium">
-              1
-            </span>
-            <span>从开服者那里获取服务器地址（如 <code className="text-blue-400">john123.cloudplay.lat</code>）</span>
-          </li>
-          <li className="flex items-start gap-3">
-            <span className="flex-shrink-0 w-6 h-6 bg-gray-800 rounded-full flex items-center justify-center text-xs font-medium">
-              2
-            </span>
-            <span>输入地址并点击"连接游戏"</span>
-          </li>
-          <li className="flex items-start gap-3">
-            <span className="flex-shrink-0 w-6 h-6 bg-gray-800 rounded-full flex items-center justify-center text-xs font-medium">
-              3
-            </span>
-            <span>等待连接建立，然后在 游戏中连接 <code className="text-blue-400">localhost:25566</code></span>
-          </li>
-        </ol>
-      </div>
+      {tunnelStatus === 'error' && error && (
+        <section
+          className="mt-4 rounded-xl border p-4"
+          style={{
+            borderColor: 'color-mix(in srgb, var(--danger) 30%, transparent)',
+            background: 'color-mix(in srgb, var(--danger) 8%, transparent)',
+          }}
+        >
+          <p className="text-sm" style={{ color: 'var(--danger)' }}>
+            {error}
+          </p>
+        </section>
+      )}
+
+      <ol
+        className="mt-6 space-y-2 border-t pt-5 text-2xs"
+        style={{ borderColor: 'var(--line)', color: 'var(--mute)' }}
+      >
+        <li>1. 粘贴开服者分享的地址</li>
+        <li>2. 连接成功后复制 localhost 地址</li>
+        <li>3. 在游戏多人模式中加入该服务器</li>
+      </ol>
     </div>
   );
 }

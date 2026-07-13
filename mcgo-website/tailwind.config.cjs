@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
-export default {
-  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+module.exports = {
+  content: ['./index.html', './src/**/*.{vue,js,ts,jsx,tsx}'],
   theme: {
     extend: {
       colors: {
@@ -39,14 +39,20 @@ export default {
           'monospace',
         ],
       },
+      maxWidth: {
+        site: '72rem',
+      },
       fontSize: {
         '2xs': ['0.6875rem', { lineHeight: '1rem' }],
       },
-      boxShadow: {
-        panel: '0 0 0 1px #23232a, 0 24px 48px -24px rgba(0,0,0,0.7)',
-      },
       animation: {
-        'pulse-soft': 'pulse 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'fade-up': 'fadeUp 0.6s ease-out both',
+      },
+      keyframes: {
+        fadeUp: {
+          '0%': { opacity: '0', transform: 'translateY(12px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
       },
     },
   },
