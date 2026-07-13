@@ -168,9 +168,9 @@ pnpm run build        # 构建生产版本
 
 ### 1. Cloudflare 配置
 
-1. 注册 `cloudplay.app` 域名
+1. 注册 `cloudplay.lat` 域名
 2. 创建 Cloudflare Tunnel
-3. 配置泛域名解析 `*.cloudplay.app`
+3. 配置泛域名解析 `*.cloudplay.lat`
 4. 创建 KV 命名空间
 5. 获取 API Token
 
@@ -185,7 +185,7 @@ TUNNEL_ID = "你的隧道ID"
 
 **cloudplay-app/src-tauri/src/lib.rs**
 ```rust
-let api_client = ApiClient::new("https://api.cloudplay.app".to_string());
+let api_client = ApiClient::new("https://api.cloudplay.lat".to_string());
 ```
 
 ### 3. 部署

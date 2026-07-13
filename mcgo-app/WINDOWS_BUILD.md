@@ -152,4 +152,4 @@ To remove SmartScreen warnings and improve trust:
 
 ---
 
-For more information, visit https://cloudplay.app
+For more information, visit https://cloudplay.lat

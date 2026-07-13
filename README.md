@@ -251,14 +251,14 @@ wrangler secret put CLOUDFLARE_API_TOKEN
 在 `cloudplay-app/src-tauri/src/lib.rs` 中配置 API 地址：
 
 ```rust
-let api_client = ApiClient::new("https://api.cloudplay.app".to_string());
+let api_client = ApiClient::new("https://api.cloudplay.lat".to_string());
 ```
 
 ### Cloudflare 配置
 
-1. **注册域名**：在 Cloudflare 注册 `cloudplay.app`
+1. **注册域名**：在 Cloudflare 注册 `cloudplay.lat`
 2. **创建 Tunnel**：在 Zero Trust Dashboard 创建持久隧道
-3. **配置 DNS**：添加泛域名解析 `*.cloudplay.app`
+3. **配置 DNS**：添加泛域名解析 `*.cloudplay.lat`
 4. **创建 KV**：用于速率限制计数
 
 ##  测试
@@ -411,9 +411,9 @@ xcrun notarytool submit src-tauri/target/release/bundle/macos/CloudPlay.dmg --ap
 
 ##  联系我们
 
-- **官网**：[cloudplay.app](https://cloudplay.app)
+- **官网**：[cloudplay.lat](https://cloudplay.lat)
 - **GitHub**：[github.com/cloudplay](https://github.com/cloudplay)
-- **邮箱**：support@cloudplay.app
+- **邮箱**：support@cloudplay.lat
 - **Discord**：[加入社区](https://discord.gg/cloudplay)
 
 ##  Star History

@@ -1,6 +1,6 @@
 import { TokenResponse } from '../types';
 
-const API_BASE_URL = 'https://api.cloudplay.app';
+const API_BASE_URL = 'https://api.cloudplay.lat';
 
 export async function requestToken(roomId: string): Promise<TokenResponse> {
   try {

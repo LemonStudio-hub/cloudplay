@@ -37,7 +37,7 @@ CloudPlay supports:
 
 ### How do I install CloudPlay?
 
-1. Download the installer for your platform from [cloudplay.app](https://cloudplay.app)
+1. Download the installer for your platform from [cloudplay.lat](https://cloudplay.lat)
 2. Run the installer
 3. Follow the on-screen instructions
 
@@ -63,7 +63,7 @@ We're working on Apple notarization.
 
 CloudPlay will automatically check for updates. You can also:
 
-1. Download the latest version from [cloudplay.app](https://cloudplay.app)
+1. Download the latest version from [cloudplay.lat](https://cloudplay.lat)
 2. Install over the existing installation
 
 ## Usage
@@ -81,14 +81,14 @@ CloudPlay will automatically check for updates. You can also:
 
 1. Open CloudPlay
 2. Select "Client" mode
-3. Enter the host's address (e.g., "myserver.cloudplay.app")
+3. Enter the host's address (e.g., "myserver.cloudplay.lat")
 4. Set a local port (default: 25566)
 5. Click "Connect"
 6. In your game, connect to `localhost:<port>`
 
 ### What is the room ID?
 
-The room ID is a unique identifier for your game session. It becomes part of your address (e.g., `myserver.cloudplay.app`).
+The room ID is a unique identifier for your game session. It becomes part of your address (e.g., `myserver.cloudplay.lat`).
 
 **Rules:**
 - 3-20 characters
@@ -235,7 +235,7 @@ CloudPlay collects minimal data:
 
 ### Is my IP address exposed?
 
-No! Other players only see your Cloudflare-assigned address (e.g., `myserver.cloudplay.app`), not your real IP.
+No! Other players only see your Cloudflare-assigned address (e.g., `myserver.cloudplay.lat`), not your real IP.
 
 ### Can I delete my data?
 
@@ -266,7 +266,7 @@ CloudPlay is licensed under the [GNU Affero General Public License v3.0](../LICE
 
 - **GitHub Discussions**: Ask questions
 - **Discord**: Join our community
-- **Email**: support@cloudplay.app
+- **Email**: support@cloudplay.lat
 
 ### How do I report a bug?
 

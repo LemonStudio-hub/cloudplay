@@ -17,7 +17,7 @@ We take security seriously. If you discover a security vulnerability in CloudPla
 
 **Please do NOT report security vulnerabilities through public GitHub issues.**
 
-Instead, please report them via email to **security@cloudplay.app**.
+Instead, please report them via email to **security@cloudplay.lat**.
 
 You should receive a response within 48 hours. If for some reason you do not, please follow up to ensure we received your original message.
 
@@ -118,8 +118,8 @@ Subscribe to our [security announcements](https://github.com/cloudplay/cloudplay
 
 ## Contact
 
-- **Security Email**: security@cloudplay.app
-- **PGP Key**: [Download](https://cloudplay.app/pgp-key.txt)
+- **Security Email**: security@cloudplay.lat
+- **PGP Key**: [Download](https://cloudplay.lat/pgp-key.txt)
 - **Bug Bounty**: Coming soon
 
 ## Acknowledgments

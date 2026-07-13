@@ -127,5 +127,5 @@ This is the initial release, no upgrade path needed.
 ## Links
 
 - [GitHub Releases](https://github.com/cloudplay/cloudplay/releases)
-- [Documentation](https://cloudplay.app/docs)
+- [Documentation](https://cloudplay.lat/docs)
 - [Changelog](https://github.com/cloudplay/cloudplay/blob/main/CHANGELOG.md)

@@ -27,7 +27,7 @@ ping -c 4 1.1.1.1
 curl -I https://api.cloudflare.com
 
 # Test API endpoint
-curl https://api.cloudplay.app/api/health
+curl https://api.cloudplay.lat/api/health
 ```
 
 ### Check System Resources
@@ -165,7 +165,7 @@ sudo pacman -S dbus webkit2gtk-4.1 gtk3 libayatana-appindicator librsvg
 
 **Solution:**
 1. **Verify host is running:** Ask host to check tunnel status
-2. **Check address:** Ensure correct format (e.g., `myserver.cloudplay.app`)
+2. **Check address:** Ensure correct format (e.g., `myserver.cloudplay.lat`)
 3. **Check firewall:**
    ```bash
    # Windows
@@ -296,12 +296,12 @@ sudo pacman -S dbus webkit2gtk-4.1 gtk3 libayatana-appindicator librsvg
 **Solution:**
 1. **Check API health:**
    ```bash
-   curl https://api.cloudplay.app/api/health
+   curl https://api.cloudplay.lat/api/health
    ```
 
 2. **Check DNS:**
    ```bash
-   nslookup api.cloudplay.app
+   nslookup api.cloudplay.lat
    ```
 
 3. **Check Cloudflare status:** Visit [cloudflarestatus.com](https://www.cloudflarestatus.com/)
@@ -417,14 +417,14 @@ cat /etc/os-release >> ~/Desktop/cloudplay-logs.txt
 traceroute 1.1.1.1
 
 # Test DNS resolution
-nslookup api.cloudplay.app
-nslookup *.cloudplay.app
+nslookup api.cloudplay.lat
+nslookup *.cloudplay.lat
 
 # Test TCP connection
-telnet api.cloudplay.app 443
+telnet api.cloudplay.lat 443
 
 # Test HTTPS
-curl -v https://api.cloudplay.app/api/health
+curl -v https://api.cloudplay.lat/api/health
 ```
 
 ### Process Diagnostics
@@ -486,4 +486,4 @@ If you can't resolve the issue:
 1. **Search existing issues:** [GitHub Issues](https://github.com/cloudplay/cloudplay/issues)
 2. **Ask in Discussions:** [GitHub Discussions](https://github.com/cloudplay/cloudplay/discussions)
 3. **Join Discord:** [discord.gg/cloudplay](https://discord.gg/cloudplay)
-4. **Email support:** support@cloudplay.app
+4. **Email support:** support@cloudplay.lat

@@ -112,7 +112,7 @@ wrangler pages deploy dist --project-name cloudplay-website
 1. Go to Cloudflare Dashboard → Pages
 2. Select your project
 3. Go to "Custom domains"
-4. Add your domain (e.g., `cloudplay.app`)
+4. Add your domain (e.g., `cloudplay.lat`)
 5. Configure DNS as instructed
 
 ### Option B: GitHub Pages

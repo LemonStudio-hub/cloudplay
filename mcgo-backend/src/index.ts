@@ -13,7 +13,7 @@ const app = new Hono<{ Bindings: Bindings }>();
 
 // CORS configuration
 app.use('*', cors({
-  origin: ['https://cloudplay.app', 'https://www.cloudplay.app', 'http://localhost:1420', 'tauri://localhost'],
+  origin: ['https://cloudplay.lat', 'https://www.cloudplay.lat', 'http://localhost:1420', 'tauri://localhost'],
   allowMethods: ['POST', 'GET', 'OPTIONS'],
   allowHeaders: ['Content-Type'],
   maxAge: 86400,
@@ -36,7 +36,7 @@ app.post('/api/token', async (c) => {
       }, 400);
     }
 
-    const hostname = `${roomId}.cloudplay.app`;
+    const hostname = `${roomId}.cloudplay.lat`;
     const { ACCOUNT_ID, TUNNEL_ID, CLOUDFLARE_API_TOKEN } = c.env;
 
     // 2. Call Cloudflare API to generate tunnel token

@@ -212,7 +212,7 @@ This guide covers installing CloudPlay for production use.
 
 ## Download
 
-Download the latest release for your platform from the [official website](https://cloudplay.app).
+Download the latest release for your platform from the [official website](https://cloudplay.lat).
 
 ### Windows
 
@@ -240,7 +240,7 @@ macOS may show a warning about unidentified developer. Right-click and select "O
 
 \`\`\`bash
 # Download .deb package
-wget https://cloudplay.app/releases/cloudplay_1.0.0_amd64.deb
+wget https://cloudplay.lat/releases/cloudplay_1.0.0_amd64.deb
 
 # Install
 sudo dpkg -i cloudplay_1.0.0_amd64.deb
@@ -253,7 +253,7 @@ sudo apt-get install -f
 
 \`\`\`bash
 # Download AppImage
-wget https://cloudplay.app/releases/cloudplay_1.0.0_amd64.AppImage
+wget https://cloudplay.lat/releases/cloudplay_1.0.0_amd64.AppImage
 
 # Make executable
 chmod +x cloudplay_1.0.0_amd64.AppImage
@@ -349,7 +349,7 @@ This guide covers configuring CloudPlay for your needs.
 |---------|---------|-------------|
 | Local Port | 25565 | Default port for game server |
 | Proxy Port | 25566 | Default port for client proxy |
-| API Endpoint | api.cloudplay.app | Backend API URL |
+| API Endpoint | api.cloudplay.lat | Backend API URL |
 
 ## Environment Variables
 
@@ -375,7 +375,7 @@ wrangler secret put CLOUDFLARE_API_TOKEN
 Configure API endpoint in \`cloudplay-app/src-tauri/src/lib.rs\`:
 
 \`\`\`rust
-let api_client = ApiClient::new("https://api.cloudplay.app".to_string());
+let api_client = ApiClient::new("https://api.cloudplay.lat".to_string());
 \`\`\`
 
 ## Cloudflare Configuration
@@ -442,7 +442,7 @@ TUNNEL_ID = "your_tunnel_id"
 {
   "productName": "CloudPlay",
   "version": "1.0.0",
-  "identifier": "app.cloudplay.app",
+  "identifier": "app.cloudplay.lat",
   "build": {
     "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build"
@@ -496,7 +496,7 @@ Yes! CloudPlay is open source under the AGPL-3.0 license.
 
 ### What is the room ID?
 
-The room ID is a unique identifier for your session. It becomes part of your address (e.g., \`myserver.cloudplay.app\`).
+The room ID is a unique identifier for your session. It becomes part of your address (e.g., \`myserver.cloudplay.lat\`).
 
 **Rules:**
 - 3-20 characters
@@ -555,7 +555,7 @@ Another application is using the port.
 
 - **GitHub Discussions**: Ask questions
 - **Discord**: Join our community
-- **Email**: support@cloudplay.app
+- **Email**: support@cloudplay.lat
 `,
 
   'guide/troubleshooting': `# Troubleshooting
@@ -581,7 +581,7 @@ tail -f ~/.cloudplay/logs/app.log
 ping -c 4 1.1.1.1
 
 # Test API
-curl https://api.cloudplay.app/api/health
+curl https://api.cloudplay.lat/api/health
 \`\`\`
 
 ## Installation Issues
@@ -920,7 +920,7 @@ Generate a tunnel token.
 {
   "success": true,
   "data": {
-    "hostname": "myserver.cloudplay.app",
+    "hostname": "myserver.cloudplay.lat",
     "token": "eyJhbGciOiJIUzI1NiIs...",
     "expiresIn": 3600
   }
@@ -961,8 +961,8 @@ Room IDs are validated against:
 ### CORS
 
 Only allowed origins can access the API:
-- \`https://cloudplay.app\`
-- \`https://www.cloudplay.app\`
+- \`https://cloudplay.lat\`
+- \`https://www.cloudplay.lat\`
 - \`tauri://localhost\` (desktop client)
 
 ## Deployment
@@ -1221,8 +1221,8 @@ const roomIdRegex = /^[a-zA-Z0-9_-]{3,20}$/;
 ### CORS
 
 Only allowed origins:
-- \`https://cloudplay.app\`
-- \`https://www.cloudplay.app\`
+- \`https://cloudplay.lat\`
+- \`https://www.cloudplay.lat\`
 - \`tauri://localhost\`
 
 ## Application Security
@@ -1288,7 +1288,7 @@ The CloudPlay API is a Cloudflare Worker that handles token issuance and rate li
 ## Base URL
 
 \`\`\`
-Production: https://api.cloudplay.app
+Production: https://api.cloudplay.lat
 Development: http://localhost:8787
 \`\`\`
 
@@ -1343,8 +1343,8 @@ All responses follow this format:
 ## CORS
 
 The API supports CORS for:
-- \`https://cloudplay.app\`
-- \`https://www.cloudplay.app\`
+- \`https://cloudplay.lat\`
+- \`https://www.cloudplay.lat\`
 - \`tauri://localhost\`
 
 ## SDKs
@@ -1363,7 +1363,7 @@ const { hostname, token } = await client.generateToken('myserver');
 \`\`\`rust
 use cloudplay_sdk::CloudPlayClient;
 
-let client = CloudPlayClient::new("https://api.cloudplay.app");
+let client = CloudPlayClient::new("https://api.cloudplay.lat");
 let token = client.generate_token("myserver").await?;
 \`\`\`
 `,
@@ -1414,7 +1414,7 @@ POST /api/token
 {
   "success": true,
   "data": {
-    "hostname": "myserver.cloudplay.app",
+    "hostname": "myserver.cloudplay.lat",
     "token": "eyJhbGciOiJIUzI1NiIs...",
     "expiresIn": 3600
   }
@@ -1444,7 +1444,7 @@ POST /api/token
 ### cURL
 
 \`\`\`bash
-curl -X POST https://api.cloudplay.app/api/token \\
+curl -X POST https://api.cloudplay.lat/api/token \\
   -H "Content-Type: application/json" \\
   -d '{"roomId": "myserver"}'
 \`\`\`
@@ -1452,7 +1452,7 @@ curl -X POST https://api.cloudplay.app/api/token \\
 ### JavaScript
 
 \`\`\`typescript
-const response = await fetch('https://api.cloudplay.app/api/token', {
+const response = await fetch('https://api.cloudplay.lat/api/token', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ roomId: 'myserver' }),
@@ -1493,7 +1493,7 @@ struct TokenData {
 
 let client = Client::new();
 let response = client
-    .post("https://api.cloudplay.app/api/token")
+    .post("https://api.cloudplay.lat/api/token")
     .json(&TokenRequest { room_id: "myserver".to_string() })
     .send()
     .await?
@@ -1541,13 +1541,13 @@ No parameters required.
 ### cURL
 
 \`\`\`bash
-curl https://api.cloudplay.app/api/health
+curl https://api.cloudplay.lat/api/health
 \`\`\`
 
 ### JavaScript
 
 \`\`\`typescript
-const response = await fetch('https://api.cloudplay.app/api/health');
+const response = await fetch('https://api.cloudplay.lat/api/health');
 const data = await response.json();
 console.log('Status:', data.status);
 \`\`\`
@@ -1681,7 +1681,7 @@ The API uses standard HTTP status codes and returns errors in a consistent forma
 
 \`\`\`typescript
 try {
-  const response = await fetch('https://api.cloudplay.app/api/token', {
+  const response = await fetch('https://api.cloudplay.lat/api/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ roomId: 'myserver' }),
@@ -1855,7 +1855,7 @@ To use a custom domain:
 
 \`\`\`toml
 routes = [
-  { pattern = "api.cloudplay.app/*", zone_name = "cloudplay.app" }
+  { pattern = "api.cloudplay.lat/*", zone_name = "cloudplay.lat" }
 ]
 \`\`\`
 
@@ -1916,7 +1916,7 @@ wrangler pages deploy dist --project-name cloudplay-website
 1. Go to Cloudflare Dashboard > Pages
 2. Select your project
 3. Go to "Custom domains"
-4. Add your domain (e.g., \`cloudplay.app\`)
+4. Add your domain (e.g., \`cloudplay.lat\`)
 
 ### Configure DNS
 
@@ -2055,7 +2055,7 @@ Configure in \`tauri.conf.json\`:
   "plugins": {
     "updater": {
       "pubkey": "your-public-key",
-      "endpoints": ["https://cloudplay.app/updates.json"]
+      "endpoints": ["https://cloudplay.lat/updates.json"]
     }
   }
 }
@@ -2074,7 +2074,7 @@ Add a CNAME record for wildcard subdomains:
 |------|------|--------|-------|
 | CNAME | \`*\` | \`<tunnel-uuid>.cfargotunnel.com\` | Proxied |
 
-This ensures all subdomains (\`*.cloudplay.app\`) are routed to the tunnel.
+This ensures all subdomains (\`*.cloudplay.lat\`) are routed to the tunnel.
 
 ## Main Domain
 
@@ -2109,12 +2109,12 @@ Enable DNSSEC for additional security:
 
 \`\`\`bash
 # Check DNS resolution
-nslookup cloudplay.app
-nslookup api.cloudplay.app
-nslookup myserver.cloudplay.app
+nslookup cloudplay.lat
+nslookup api.cloudplay.lat
+nslookup myserver.cloudplay.lat
 
 # Check SSL
-curl -vI https://cloudplay.app
+curl -vI https://cloudplay.lat
 \`\`\`
 `,
 
@@ -2391,7 +2391,7 @@ describe('Token API', () => {
 
     const data = await response.json();
     expect(data.success).toBe(true);
-    expect(data.data.hostname).toBe('test123.cloudplay.app');
+    expect(data.data.hostname).toBe('test123.cloudplay.lat');
   });
 
   it('should reject invalid room ID', async () => {

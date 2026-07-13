@@ -5,7 +5,7 @@ This document describes the CloudPlay Worker API.
 ## Base URL
 
 ```
-Production: https://api.cloudplay.app
+Production: https://api.cloudplay.lat
 Development: http://localhost:8787
 ```
 
@@ -54,7 +54,7 @@ Generate a tunnel token for a specific room.
 {
   "success": true,
   "data": {
-    "hostname": "myserver.cloudplay.app",
+    "hostname": "myserver.cloudplay.lat",
     "token": "eyJhbGciOiJIUzI1NiIs...",
     "expiresIn": 3600
   }
@@ -90,7 +90,7 @@ Generate a tunnel token for a specific room.
 **Example cURL:**
 
 ```bash
-curl -X POST https://api.cloudplay.app/api/token \
+curl -X POST https://api.cloudplay.lat/api/token \
   -H "Content-Type: application/json" \
   -d '{"roomId": "myserver"}'
 ```
@@ -98,7 +98,7 @@ curl -X POST https://api.cloudplay.app/api/token \
 **Example JavaScript:**
 
 ```typescript
-const response = await fetch('https://api.cloudplay.app/api/token', {
+const response = await fetch('https://api.cloudplay.lat/api/token', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -144,7 +144,7 @@ struct TokenData {
 async fn request_token(room_id: &str) -> Result<TokenResponse, reqwest::Error> {
     let client = Client::new();
     let response = client
-        .post("https://api.cloudplay.app/api/token")
+        .post("https://api.cloudplay.lat/api/token")
         .json(&TokenRequest {
             room_id: room_id.to_string(),
         })
@@ -190,7 +190,7 @@ None required.
 **Example cURL:**
 
 ```bash
-curl https://api.cloudplay.app/api/health
+curl https://api.cloudplay.lat/api/health
 ```
 
 ---
@@ -261,8 +261,8 @@ All errors follow the same format:
 
 The API supports Cross-Origin Resource Sharing (CORS) for the following origins:
 
-- `https://cloudplay.app`
-- `https://www.cloudplay.app`
+- `https://cloudplay.lat`
+- `https://www.cloudplay.lat`
 - `http://localhost:1420` (Tauri dev)
 - `tauri://localhost` (Tauri production)
 
@@ -346,7 +346,7 @@ curl http://localhost:8787/api/health
 import { CloudPlayClient } from '@cloudplay/sdk';
 
 const client = new CloudPlayClient({
-  baseUrl: 'https://api.cloudplay.app',
+  baseUrl: 'https://api.cloudplay.lat',
 });
 
 // Generate token
@@ -361,7 +361,7 @@ const health = await client.healthCheck();
 ```rust
 use cloudplay_sdk::CloudPlayClient;
 
-let client = CloudPlayClient::new("https://api.cloudplay.app");
+let client = CloudPlayClient::new("https://api.cloudplay.lat");
 
 // Generate token
 let token = client.generate_token("myserver").await?;

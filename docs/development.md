@@ -535,5 +535,5 @@ xcode-select --install
 
 - **GitHub Discussions**: Ask questions and share ideas
 - **Discord**: Join our community chat
-- **Email**: dev@cloudplay.app
+- **Email**: dev@cloudplay.lat
 - **Documentation**: Check the docs/ directory

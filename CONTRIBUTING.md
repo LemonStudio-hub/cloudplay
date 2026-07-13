@@ -440,7 +440,7 @@ git push && git push --tags
 
 - **GitHub Discussions**：[提问](https://github.com/cloudplay/cloudplay/discussions)
 - **Discord**：[加入社区](https://discord.gg/cloudplay)
-- **Email**：dev@cloudplay.app
+- **Email**：dev@cloudplay.lat
 
 ## 致谢
 

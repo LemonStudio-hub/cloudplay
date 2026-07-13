@@ -11,7 +11,7 @@ use tokio::sync::Mutex;
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let tunnel_manager = TunnelManager::new();
-    let api_client = ApiClient::new("https://api.cloudplay.app".to_string());
+    let api_client = ApiClient::new("https://api.cloudplay.lat".to_string());
 
     let state = AppState {
         tunnel_manager,

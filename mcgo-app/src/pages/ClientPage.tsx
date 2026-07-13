@@ -48,7 +48,7 @@ export function ClientPage() {
               type="text"
               value={serverAddress}
               onChange={(e) => setServerAddress(e.target.value)}
-              placeholder="例如: john123.cloudplay.app"
+              placeholder="例如: john123.cloudplay.lat"
               className="input-field"
               disabled={tunnelStatus === 'running' || tunnelStatus === 'connecting'}
             />
@@ -138,7 +138,7 @@ export function ClientPage() {
             <span className="flex-shrink-0 w-6 h-6 bg-gray-800 rounded-full flex items-center justify-center text-xs font-medium">
               1
             </span>
-            <span>从开服者那里获取服务器地址（如 <code className="text-blue-400">john123.cloudplay.app</code>）</span>
+            <span>从开服者那里获取服务器地址（如 <code className="text-blue-400">john123.cloudplay.lat</code>）</span>
           </li>
           <li className="flex items-start gap-3">
             <span className="flex-shrink-0 w-6 h-6 bg-gray-800 rounded-full flex items-center justify-center text-xs font-medium">
