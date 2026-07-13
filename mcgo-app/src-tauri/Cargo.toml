@@ -1,0 +1,27 @@
+[package]
+name = "cloudplay-app"
+version = "1.0.0"
+edition = "2021"
+authors = ["CloudPlay Team <team@cloudplay.app>"]
+description = "CloudPlay - 局域网游戏远程联机 Desktop Client"
+license = "MIT"
+
+[workspace]
+
+[lib]
+name = "cloudplay_app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+reqwest = { version = "0.12", features = ["json"] }
+anyhow = "1"
+keyring = "3"
+log = "0.4"
+env_logger = "0.11"

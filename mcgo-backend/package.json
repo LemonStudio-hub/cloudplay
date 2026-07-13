@@ -1,0 +1,19 @@
+{
+  "name": "cloudplay-backend",
+  "version": "1.0.0",
+  "description": "CloudPlay Token issuance API powered by Cloudflare Workers",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "hono": "^4.6.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241218.0",
+    "typescript": "^5.7.0",
+    "wrangler": "^3.100.0"
+  }
+}

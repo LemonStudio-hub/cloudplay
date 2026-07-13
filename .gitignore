@@ -1,0 +1,62 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build
+dist/
+build/
+target/
+*.exe
+*.msi
+*.dmg
+*.deb
+*.AppImage
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Environment
+.env
+.env.local
+.env.*.local
+.dev.vars
+
+# Wrangler
+.wrangler/
+
+# Rust
+Cargo.lock
+*.pdb
+
+# Tauri
+src-tauri/target/
+src-tauri/WixTools/
+src-tauri/*.wixobj
+src-tauri/*.wixpdb
+
+# Coverage
+coverage/
+*.lcov
+
+# Cache
+.cache/
+*.cache
+
+# Temporary
+tmp/
+temp/
+*.tmp
+*.temp
