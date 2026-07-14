@@ -34,7 +34,16 @@ export default function App() {
       <TitleBar />
       <Sidebar />
       <main className="shell__main">
-        <Suspense fallback={<Fallback />}>{page}</Suspense>
+        <Suspense fallback={<Fallback />}>
+          <div
+            key={mode}
+            className={
+              mode === 'host' ? 'page-switch page-switch--host' : 'page-switch page-switch--client'
+            }
+          >
+            {page}
+          </div>
+        </Suspense>
       </main>
     </div>
   );

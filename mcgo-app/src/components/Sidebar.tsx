@@ -94,10 +94,36 @@ export const Sidebar = memo(function Sidebar() {
       </nav>
 
       <div
-        className="shell__foot mt-auto border-t px-3 py-3 max-sm:mt-0 max-sm:border-0 max-sm:px-0 max-sm:py-0 max-sm:flex max-sm:items-center max-sm:gap-2"
-        style={{ borderColor: 'var(--line)' }}
+        className="shell__foot mt-auto px-3 py-3 max-sm:mt-0 max-sm:px-0 max-sm:py-0 max-sm:flex max-sm:items-center max-sm:gap-2"
       >
-        <div className="mb-2.5 space-y-1 max-sm:mb-0 max-sm:hidden">
+        <div className="mb-2.5 flex items-center max-sm:mb-0 max-sm:contents">
+          <button
+            type="button"
+            className="theme-switch"
+            data-mode={theme}
+            role="switch"
+            aria-checked={theme === 'light'}
+            onClick={toggle}
+            aria-label={theme === 'dark' ? '切换浅色模式' : '切换深色模式'}
+          >
+            <span className="theme-switch__track">
+              <span className="theme-switch__icon theme-switch__icon--sun" aria-hidden>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round">
+                  <circle cx="12" cy="12" r="3.25" />
+                  <path d="M12 3.5v1.5M12 19v1.5M3.5 12H5M19 12h1.5M6.05 6.05l1.06 1.06M16.89 16.89l1.06 1.06M6.05 17.95l1.06-1.06M16.89 7.11l1.06-1.06" />
+                </svg>
+              </span>
+              <span className="theme-switch__icon theme-switch__icon--moon" aria-hidden>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20.5 14.2A8 8 0 0 1 9.8 3.5 8.2 8.2 0 1 0 20.5 14.2z" />
+                </svg>
+              </span>
+              <span className="theme-switch__thumb" aria-hidden />
+            </span>
+          </button>
+        </div>
+
+        <div className="space-y-1 max-sm:hidden">
           <div className="flex items-center gap-2 text-2xs" style={{ color: 'var(--mute)' }}>
             <span
               className={cn(
@@ -141,33 +167,6 @@ export const Sidebar = memo(function Sidebar() {
             ) : null}
           </div>
         </div>
-
-        <div className="flex items-center max-sm:contents">
-          <button
-            type="button"
-            className="theme-switch"
-            data-mode={theme}
-            role="switch"
-            aria-checked={theme === 'light'}
-            onClick={toggle}
-            aria-label={theme === 'dark' ? '切换浅色模式' : '切换深色模式'}
-          >
-            <span className="theme-switch__track">
-              <span className="theme-switch__icon theme-switch__icon--sun" aria-hidden>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round">
-                  <circle cx="12" cy="12" r="3.25" />
-                  <path d="M12 3.5v1.5M12 19v1.5M3.5 12H5M19 12h1.5M6.05 6.05l1.06 1.06M16.89 16.89l1.06 1.06M6.05 17.95l1.06-1.06M16.89 7.11l1.06-1.06" />
-                </svg>
-              </span>
-              <span className="theme-switch__icon theme-switch__icon--moon" aria-hidden>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20.5 14.2A8 8 0 0 1 9.8 3.5 8.2 8.2 0 1 0 20.5 14.2z" />
-                </svg>
-              </span>
-              <span className="theme-switch__thumb" aria-hidden />
-            </span>
-          </button>
-        </div>
       </div>
     </aside>
   );
@@ -190,40 +189,19 @@ function ModeButton({
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={active}
       className={cn(
-        'flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors',
+        'mode-btn flex items-center gap-3 rounded-lg px-3 py-2.5 text-left',
         'max-sm:px-2.5 max-sm:py-2',
+        active && 'mode-btn--active',
       )}
-      style={
-        active
-          ? {
-              background: 'color-mix(in srgb, var(--green) 8%, transparent)',
-              color: 'var(--ink)',
-              boxShadow:
-                'inset 0 0 0 1px color-mix(in srgb, var(--green) 35%, transparent)',
-            }
-          : { color: 'var(--mute)' }
-      }
     >
-      <span
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border"
-        style={
-          active
-            ? {
-                borderColor: 'color-mix(in srgb, var(--green) 35%, var(--line))',
-                background: 'var(--raised)',
-                color: 'var(--green)',
-              }
-            : { borderColor: 'transparent' }
-        }
-      >
+      <span className="mode-btn__icon flex h-8 w-8 shrink-0 items-center justify-center rounded-md border">
         {icon}
       </span>
       <span className="min-w-0 max-sm:hidden">
         <span className="block text-sm font-medium">{title}</span>
-        <span className="block text-2xs" style={{ color: 'var(--mute)' }}>
-          {desc}
-        </span>
+        <span className="mode-btn__desc block text-2xs">{desc}</span>
       </span>
     </button>
   );

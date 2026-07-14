@@ -15,7 +15,7 @@ async function getAppWindow() {
 
 const iconProps = {
   size: 12,
-  strokeWidth: 2,
+  strokeWidth: 1.2,
   absoluteStrokeWidth: true,
   'aria-hidden': true as const,
 };
