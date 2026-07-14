@@ -2,7 +2,6 @@
   "productName": "CloudPlay",
   "version": "1.0.0",
   "identifier": "app.cloudplay.lat",
-  "description": "CloudPlay - LAN game remote multiplayer client",
   "build": {
     "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build",
