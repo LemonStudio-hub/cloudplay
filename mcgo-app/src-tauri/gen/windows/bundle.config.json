@@ -1,0 +1,15 @@
+{
+  "publisher": "CN=CloudPlay",
+  "publisherDisplayName": "CloudPlay Team",
+  "capabilities": {
+    "general": ["internetClient", "internetClientServer", "privateNetworkClientServer"]
+  },
+  "signing": {
+    "pfx": null,
+    "pfxPassword": null
+  },
+  "resourceIndex": {
+    "enabled": false,
+    "keepConfig": false
+  }
+}

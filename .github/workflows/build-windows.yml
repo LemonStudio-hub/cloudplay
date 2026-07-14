@@ -1,0 +1,191 @@
+name: Build Windows MSIX
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: build-windows-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-msix:
+    name: Build MSIX (${{ matrix.arch }})
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        arch: [x64]
+        # 可扩展: arch: [x64, arm64]
+    defaults:
+      run:
+        working-directory: mcgo-app
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # ── Node.js + pnpm ──
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: mcgo-app/pnpm-lock.yaml
+
+      # ── Rust toolchain ──
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      # ── Rust 缓存 ──
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: mcgo-app/src-tauri -> target
+
+      # ── 安装前端依赖 ──
+      - name: Install frontend dependencies
+        run: pnpm install --frozen-lockfile
+
+      # ── 构建前端 ──
+      - name: Build frontend
+        run: pnpm run build
+
+      # ── 构建 Tauri 应用（仅编译，不打包 NSIS） ──
+      - name: Build Tauri app
+        run: cargo tauri build --target x86_64-pc-windows-msvc --bundles none
+        working-directory: mcgo-app/src-tauri
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ""
+
+      # ── 准备 MSIX 内容目录 ──
+      - name: Prepare MSIX content
+        shell: pwsh
+        run: |
+          $contentDir = "target\msix\content_${{ matrix.arch }}"
+          New-Item -ItemType Directory -Path $contentDir -Force
+
+          # 复制构建产物
+          $exePath = "src-tauri\target\x86_64-pc-windows-msvc\release\CloudPlay.exe"
+          if (-not (Test-Path $exePath)) {
+            Write-Error "Executable not found: $exePath"
+            exit 1
+          }
+          Copy-Item $exePath "$contentDir\CloudPlay.exe"
+
+          # 复制图标资源
+          New-Item -ItemType Directory -Path "$contentDir\Assets" -Force
+          Copy-Item "src-tauri\gen\windows\Assets\*" "$contentDir\Assets\" -Recurse
+
+      # ── 生成 AppxManifest.xml ──
+      - name: Generate AppxManifest.xml
+        shell: pwsh
+        run: |
+          $contentDir = "target\msix\content_${{ matrix.arch }}"
+          $template = Get-Content "src-tauri\gen\windows\AppxManifest.xml.template" -Raw
+          $config = Get-Content "src-tauri\gen\windows\bundle.config.json" | ConvertFrom-Json
+          $tauriConf = Get-Content "src-tauri\tauri.conf.json" | ConvertFrom-Json
+
+          $manifest = $template `
+            -replace '\{\{identifier\}\}', $tauriConf.identifier `
+            -replace '\{\{publisher\}\}', $config.publisher `
+            -replace '\{\{version\}\}', ($tauriConf.version + ".0") `
+            -replace '\{\{arch\}\}', '${{ matrix.arch }}' `
+            -replace '\{\{displayName\}\}', $tauriConf.productName `
+            -replace '\{\{publisherDisplayName\}\}', $config.publisherDisplayName `
+            -replace '\{\{description\}\}', $tauriConf.description `
+            -replace '\{\{exeName\}\}', "CloudPlay.exe"
+
+          $manifest | Out-File -FilePath "$contentDir\AppxManifest.xml" -Encoding UTF8
+          Write-Host "AppxManifest.xml generated successfully"
+
+      # ── 创建 MSIX 包 ──
+      - name: Create MSIX package
+        shell: pwsh
+        run: |
+          # Windows runner 自带 MakeAppx.exe
+          $sdkRoot = "${env:ProgramFiles(x86)}\Windows Kits\10\bin"
+          $makeAppx = Get-ChildItem -Path $sdkRoot -Recurse -Filter "MakeAppx.exe" |
+            Where-Object { $_.FullName -match "x64" } |
+            Select-Object -First 1 -ExpandProperty FullName
+
+          if (-not $makeAppx) {
+            # Fallback: try PATH
+            $makeAppx = (Get-Command MakeAppx.exe -ErrorAction SilentlyContinue).Source
+          }
+
+          if (-not $makeAppx) {
+            Write-Error "MakeAppx.exe not found"
+            exit 1
+          }
+
+          Write-Host "Using MakeAppx: $makeAppx"
+          $contentDir = "target\msix\content_${{ matrix.arch }}"
+          $msixFile = "target\msix\CloudPlay_${{ matrix.arch }}.msix"
+
+          & $makeAppx pack /d $contentDir /p $msixFile /o
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "MakeAppx failed with exit code $LASTEXITCODE"
+            exit 1
+          }
+
+          Write-Host "MSIX created: $msixFile"
+
+      # ── 签名（仅 tag 触发时） ──
+      - name: Sign MSIX
+        if: startsWith(github.ref, 'refs/tags/v') && env.SIGNING_CERTIFICATE != ''
+        shell: pwsh
+        env:
+          SIGNING_CERTIFICATE: ${{ secrets.SIGNING_CERTIFICATE_BASE64 }}
+          SIGNING_PASSWORD: ${{ secrets.SIGNING_CERTIFICATE_PASSWORD }}
+        run: |
+          # 解码 PFX 证书
+          $pfxBytes = [Convert]::FromBase64String($env:SIGNING_CERTIFICATE)
+          $pfxPath = Join-Path $env:TEMP "signing.pfx"
+          [IO.File]::WriteAllBytes($pfxPath, $pfxBytes)
+
+          $sdkRoot = "${env:ProgramFiles(x86)}\Windows Kits\10\bin"
+          $signtool = Get-ChildItem -Path $sdkRoot -Recurse -Filter "signtool.exe" |
+            Where-Object { $_.FullName -match "x64" } |
+            Select-Object -First 1 -ExpandProperty FullName
+
+          $msixFile = "target\msix\CloudPlay_${{ matrix.arch }}.msix"
+          & $signtool sign /fd SHA256 /a /f $pfxPath /p $env:SIGNING_PASSWORD $msixFile
+
+          # 清理
+          Remove-Item $pfxPath -Force
+
+      # ── 上传产物 ──
+      - name: Upload MSIX artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CloudPlay-${{ matrix.arch }}.msix
+          path: mcgo-app/target/msix/CloudPlay_${{ matrix.arch }}.msix
+          if-no-files-found: error
+          retention-days: 30
+
+  # ── Release 时自动发布 ──
+  release:
+    name: Create Release
+    needs: build-msix
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/**/*.msix
+          generate_release_notes: true
+          draft: false
+          prerelease: ${{ contains(github.ref, 'beta') || contains(github.ref, 'alpha') }}
