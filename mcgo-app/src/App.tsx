@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { useAppStore } from './store';
 import { Sidebar } from './components/Sidebar';
 import { TitleBar } from './components/TitleBar';
@@ -22,12 +22,38 @@ function Fallback() {
   );
 }
 
+/**
+ * Two separate full interfaces sharing one stage.
+ * Only one is on-stage; the other sits a full viewport away and slides in as a whole page.
+ */
+function PageStack({ mode }: { mode: 'host' | 'client' }) {
+  return (
+    <div className="page-stack" data-mode={mode}>
+      <div
+        className="page-panel"
+        data-page="host"
+        aria-hidden={mode !== 'host'}
+      >
+        <HostPage />
+      </div>
+      <div
+        className="page-panel"
+        data-page="client"
+        aria-hidden={mode !== 'client'}
+      >
+        <ClientPage />
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const mode = useAppStore((s) => s.mode);
-  const page = useMemo(
-    () => (mode === 'host' ? <HostPage /> : <ClientPage />),
-    [mode],
-  );
+
+  useEffect(() => {
+    void import('./pages/HostPage');
+    void import('./pages/ClientPage');
+  }, []);
 
   return (
     <div className="shell">
@@ -35,14 +61,7 @@ export default function App() {
       <Sidebar />
       <main className="shell__main">
         <Suspense fallback={<Fallback />}>
-          <div
-            key={mode}
-            className={
-              mode === 'host' ? 'page-switch page-switch--host' : 'page-switch page-switch--client'
-            }
-          >
-            {page}
-          </div>
+          <PageStack mode={mode} />
         </Suspense>
       </main>
     </div>

@@ -74,23 +74,26 @@ export const Sidebar = memo(function Sidebar() {
       </div>
 
       <nav
-        className="flex flex-1 flex-col gap-1 px-3 max-sm:flex-row max-sm:flex-none max-sm:px-0"
+        className="flex flex-1 flex-col px-3 max-sm:flex-none max-sm:px-0"
         aria-label="模式"
       >
-        <ModeButton
-          active={mode === 'host'}
-          onClick={() => switchMode('host')}
-          icon={<Server size={15} strokeWidth={1.75} />}
-          title="开服者"
-          desc="创建隧道"
-        />
-        <ModeButton
-          active={mode === 'client'}
-          onClick={() => switchMode('client')}
-          icon={<Users size={15} strokeWidth={1.75} />}
-          title="联机者"
-          desc="加入房间"
-        />
+        <div className="mode-nav" data-mode={mode}>
+          <span className="mode-nav__pill" aria-hidden />
+          <ModeButton
+            active={mode === 'host'}
+            onClick={() => switchMode('host')}
+            icon={<Server size={15} strokeWidth={1.75} />}
+            title="开服者"
+            desc="创建隧道"
+          />
+          <ModeButton
+            active={mode === 'client'}
+            onClick={() => switchMode('client')}
+            icon={<Users size={15} strokeWidth={1.75} />}
+            title="联机者"
+            desc="加入房间"
+          />
+        </div>
       </nav>
 
       <div
