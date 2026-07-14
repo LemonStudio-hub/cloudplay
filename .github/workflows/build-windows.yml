@@ -51,14 +51,13 @@ jobs:
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
 
-      # ── 构建前端 ──
-      - name: Build frontend
-        run: pnpm run build
+      # ── 安装 Tauri CLI ──
+      - name: Install Tauri CLI
+        run: cargo install tauri-cli --version "^2"
 
-      # ── 构建 Tauri 应用（仅编译，不打包 NSIS） ──
+      # ── 构建 Tauri 应用（包含前端构建，仅编译不打包 NSIS） ──
       - name: Build Tauri app
         run: cargo tauri build --target x86_64-pc-windows-msvc --bundles none
-        working-directory: mcgo-app/src-tauri
         env:
           TAURI_SIGNING_PRIVATE_KEY: ""
 
@@ -69,8 +68,8 @@ jobs:
           $contentDir = "target\msix\content_${{ matrix.arch }}"
           New-Item -ItemType Directory -Path $contentDir -Force
 
-          # 复制构建产物
-          $exePath = "src-tauri\target\x86_64-pc-windows-msvc\release\CloudPlay.exe"
+          # 复制构建产物（Cargo 包名是 cloudplay-app）
+          $exePath = "src-tauri\target\x86_64-pc-windows-msvc\release\cloudplay-app.exe"
           if (-not (Test-Path $exePath)) {
             Write-Error "Executable not found: $exePath"
             exit 1
