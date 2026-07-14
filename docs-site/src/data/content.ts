@@ -2529,4 +2529,171 @@ Create a Pull Request on GitHub.
 
 By contributing, you agree that your contributions will be licensed under AGPL-3.0.
 `,
+
+  'legal/privacy': `# Privacy Policy
+
+**Effective Date:** July 14, 2026
+**Last Updated:** July 14, 2026
+
+CloudPlay ("we", "us", or "our") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our desktop application, website, and related services (collectively, the "Service").
+
+---
+
+## 1. Information We Collect
+
+### 1.1 Information You Provide
+
+- **Room IDs**: When you create or join a gaming session, you provide a room identifier. Room IDs are generated client-side and are not stored on our servers beyond the duration of the active session.
+- **Server Addresses**: When connecting as a client, you provide a server address. This information is processed locally and is not retained after the session ends.
+
+### 1.2 Information Collected Automatically
+
+- **API Request Logs**: Our backend (Cloudflare Workers) may temporarily log request metadata (IP address, timestamp, request path) for operational purposes. These logs are automatically purged within 72 hours.
+- **Health Check Data**: Periodic health check pings to our API contain no personal information and are used solely to monitor service availability.
+
+### 1.3 Information We Do NOT Collect
+
+We explicitly do **not** collect:
+
+- Personal identifying information (name, email, phone number)
+- Payment or financial information
+- Browsing history or cookies for tracking purposes
+- Device fingerprints or advertising identifiers
+- Game save data, screenshots, or any game content
+- Keystrokes, clipboard content, or screen recordings
+
+---
+
+## 2. How We Use Information
+
+We use the limited information we collect solely for the following purposes:
+
+| Purpose | Data Used |
+|---------|-----------|
+| Providing the tunnel service | Room ID, API token |
+| Maintaining service reliability | Aggregated, anonymized API metrics |
+| Preventing abuse | IP-based rate limiting (temporary) |
+
+We do **not** use your data for advertising, profiling, analytics, or any purpose beyond providing the core Service.
+
+---
+
+## 3. Data Storage and Retention
+
+- **Session Data**: All session data (room IDs, tunnel configurations) is ephemeral and exists only during the active session. Once a session ends, all associated data is immediately discarded.
+- **API Tokens**: Cloudflare tunnel tokens are stored locally on your device using the operating system's secure keychain (Windows Credential Manager, macOS Keychain, or Linux Secret Service). Tokens are never transmitted to or stored on our servers.
+- **No Persistent Storage**: We maintain no databases, user accounts, or persistent storage of any user data.
+
+---
+
+## 4. Third-Party Services
+
+### 4.1 Cloudflare
+
+Our Service relies on Cloudflare's infrastructure for:
+
+- **Cloudflare Tunnels**: To establish secure connections between users
+- **Cloudflare Workers**: To run our API backend at the edge
+- **Cloudflare DNS**: For wildcard domain resolution (\`*.cloudplay.lat\`)
+
+Cloudflare's handling of data is governed by [Cloudflare's Privacy Policy](https://www.cloudflare.com/privacypolicy/).
+
+### 4.2 No Other Third Parties
+
+We do not share data with any third parties beyond Cloudflare's infrastructure, which is integral to the operation of the Service.
+
+---
+
+## 5. MSIX Packaging and Windows Capabilities
+
+### 5.1 About Our Windows Application
+
+The CloudPlay desktop application for Windows is built using [Tauri v2](https://v2.tauri.app/), which produces a traditional Win32 executable (\`.exe\`). To distribute the application through the Microsoft Store and provide a modern installation experience, we package this executable using the **MSIX Packaging Tool**.
+
+### 5.2 The runFullTrust Capability
+
+Our MSIX package declares the \`runFullTrust\` capability. This is a **restricted capability** required because the underlying application is a traditional Win32 program that may exercise the following system operations:
+
+| Capability | Purpose |
+|------------|---------|
+| File system access | Reading/writing game configuration and log files |
+| Network access | Establishing Cloudflare tunnel connections |
+| Process management | Managing the tunnel subprocess |
+| Windows Credential Manager | Securely storing API tokens via the \`keyring\` crate |
+
+The \`runFullTrust\` declaration is a **technical requirement** of packaging a Win32 application as MSIX — it does not grant the application any additional privileges beyond what a standard \`.exe\` installer would have. The application runs in the same security context as any traditionally installed desktop program.
+
+### 5.3 What This Means for You
+
+- The application **does not** request administrator privileges
+- The application **does not** modify system files or registry keys outside its own installation directory
+- The application **does not** install background services or startup items
+- All network activity is limited to the Cloudflare tunnel endpoints required for the Service to function
+
+---
+
+## 6. Data Security
+
+We implement appropriate technical measures to protect the limited data we process:
+
+- **Encryption in Transit**: All API communications use HTTPS/TLS 1.3
+- **Encryption at Rest**: API tokens are stored using OS-native secure storage
+- **No Server-Side Storage**: The absence of persistent user data eliminates the risk of data breaches
+- **Rate Limiting**: API endpoints are protected by Cloudflare Workers rate limiting to prevent abuse
+
+---
+
+## 7. Children's Privacy
+
+The Service is not directed to children under the age of 13 (or the applicable age of digital consent in your jurisdiction). We do not knowingly collect information from children. If you believe a child has provided us with personal information, please contact us so we can take appropriate action.
+
+---
+
+## 8. International Data Transfers
+
+The Service operates on Cloudflare's global edge network. API requests are processed at the nearest Cloudflare data center to your location. As Cloudflare operates in over 300 cities worldwide, your data may be processed in a country different from your own. Cloudflare's data processing practices are governed by their [Privacy Policy](https://www.cloudflare.com/privacypolicy/) and are compliant with applicable data protection regulations.
+
+---
+
+## 9. Your Rights
+
+Depending on your jurisdiction, you may have the following rights:
+
+- **Right to Access**: You may request information about what data we hold (which, given our architecture, will be minimal or none)
+- **Right to Deletion**: Since we do not persist user data, there is typically nothing to delete
+- **Right to Object**: You may stop using the Service at any time
+- **Right to Data Portability**: Not applicable as we do not maintain user profiles
+
+To exercise any of these rights, please contact us at the address below.
+
+---
+
+## 10. Changes to This Policy
+
+We may update this Privacy Policy from time to time. We will notify users of material changes by:
+
+- Updating the "Last Updated" date at the top of this page
+- Publishing changes on our documentation site
+
+Your continued use of the Service after changes constitutes acceptance of the updated policy.
+
+---
+
+## 11. Open Source Transparency
+
+CloudPlay is open-source software licensed under AGPL-3.0. You can verify our privacy practices by reviewing the source code:
+
+- [GitHub Repository](https://github.com/LemonStudio-hub/cloudplay)
+
+We believe in transparency and welcome community audit of our data handling practices.
+
+---
+
+## 12. Contact Us
+
+If you have questions about this Privacy Policy or our data practices, please contact us:
+
+- **Email**: team@cloudplay.lat
+- **GitHub Issues**: [github.com/LemonStudio-hub/cloudplay/issues](https://github.com/LemonStudio-hub/cloudplay/issues)
+`,
 }

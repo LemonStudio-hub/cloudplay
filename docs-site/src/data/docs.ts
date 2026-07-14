@@ -72,6 +72,12 @@ export const sidebar: DocSection[] = [
       { title: 'Changelog', path: '/guide/changelog' },
     ],
   },
+  {
+    title: 'Legal',
+    items: [
+      { title: 'Privacy Policy', path: '/legal/privacy' },
+    ],
+  },
 ]
 
 export function getCurrentSection(path: string): string {

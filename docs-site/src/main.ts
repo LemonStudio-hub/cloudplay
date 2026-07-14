@@ -31,6 +31,10 @@ const router = createRouter({
       component: () => import('./pages/DevelopmentPage.vue'),
     },
     {
+      path: '/legal/:page',
+      component: () => import('./pages/LegalPage.vue'),
+    },
+    {
       path: '/:pathMatch(.*)*',
       redirect: '/guide/introduction',
     },
