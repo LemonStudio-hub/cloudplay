@@ -55,9 +55,9 @@ jobs:
       - name: Install Tauri CLI
         run: cargo install tauri-cli --version "^2"
 
-      # ── 构建 Tauri 应用（包含前端构建，仅编译不打包 NSIS） ──
+      # ── 构建 Tauri 应用（包含前端构建） ──
       - name: Build Tauri app
-        run: cargo tauri build --target x86_64-pc-windows-msvc --bundles none
+        run: cargo tauri build --target x86_64-pc-windows-msvc
         env:
           TAURI_SIGNING_PRIVATE_KEY: ""
 
