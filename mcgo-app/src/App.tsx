@@ -1,7 +1,7 @@
 import { lazy, Suspense, useMemo } from 'react';
 import { useAppStore } from './store';
 import { Sidebar } from './components/Sidebar';
-import { WindowControls } from './components/WindowControls';
+import { TitleBar } from './components/TitleBar';
 
 const HostPage = lazy(() =>
   import('./pages/HostPage').then((m) => ({ default: m.HostPage })),
@@ -31,7 +31,7 @@ export default function App() {
 
   return (
     <div className="shell">
-      <WindowControls />
+      <TitleBar />
       <Sidebar />
       <main className="shell__main">
         <Suspense fallback={<Fallback />}>{page}</Suspense>

@@ -83,7 +83,7 @@
   }
 }
 
-/* Shell: sidebar + main only (no top/bottom chrome bars) */
+/* Shell: sidebar + main; top titlebar for window drag */
 .shell {
   display: grid;
   grid-template-columns: 200px 1fr;
@@ -97,7 +97,32 @@
   border: 1px solid color-mix(in srgb, var(--line) 88%, var(--green));
 }
 
-/* Sidebar brand = drag handle */
+/* Transparent top drag strip, flush with window controls */
+.titlebar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 60;
+  display: flex;
+  align-items: stretch;
+  height: 36px;
+  background: transparent;
+  pointer-events: none;
+}
+
+.titlebar__drag {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  pointer-events: auto;
+  app-region: drag;
+  -webkit-app-region: drag;
+  background: transparent;
+  cursor: default;
+}
+
+/* Sidebar brand = extra drag handle */
 .shell__brand {
   app-region: drag;
   -webkit-app-region: drag;
@@ -107,29 +132,27 @@
 /* Keep interactive controls clickable */
 .shell__aside nav,
 .shell__aside button,
+.titlebar .win-controls,
 .win-controls,
 .win-controls__btn {
   app-region: no-drag;
   -webkit-app-region: no-drag;
+  pointer-events: auto;
 }
 
-/* Window controls flush top-right of the frame */
+/* Window controls sit at the right end of the titlebar */
 .win-controls {
-  position: absolute;
-  top: 0;
-  right: 0;
-  z-index: 60;
+  position: relative;
+  z-index: 61;
   display: flex;
   align-items: stretch;
   flex-shrink: 0;
   height: 36px;
   border: none;
-  border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
-  border-left: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
-  border-radius: 0 0 0 8px;
+  border-radius: 0;
   overflow: hidden;
-  background: color-mix(in srgb, var(--panel) 88%, transparent);
-  backdrop-filter: blur(10px);
+  background: transparent;
+  pointer-events: auto;
 }
 
 .win-controls__btn {
@@ -146,10 +169,6 @@
   color: color-mix(in srgb, var(--mute) 90%, var(--ink));
   cursor: pointer;
   transition: color 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
-}
-
-.win-controls__btn + .win-controls__btn {
-  border-left: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
 }
 
 .win-controls__btn:hover {
@@ -253,9 +272,12 @@
     padding: 0.35rem 0.5rem;
   }
 
+  .titlebar {
+    height: 32px;
+  }
+
   .win-controls {
     height: 32px;
-    border-radius: 0 0 0 6px;
   }
 
   .win-controls__btn {
