@@ -1,14 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
 
 const emit = defineEmits<{
   (e: 'toggle-sidebar'): void
 }>()
 
-const router = useRouter()
 const searchQuery = ref('')
-const isSearchOpen = ref(false)
 
 const handleSearch = () => {
   if (searchQuery.value.trim()) {

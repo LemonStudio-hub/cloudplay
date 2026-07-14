@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, nextTick } from 'vue'
+import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { docs } from '../data/content'
 import hljs from 'highlight.js'

@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { sidebar } from '../data/docs'
 
-const props = defineProps<{
+defineProps<{
   isOpen: boolean
   currentSection: string
 }>()
