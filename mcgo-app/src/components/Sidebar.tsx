@@ -196,7 +196,7 @@ function ModeButton({
         active && 'mode-btn--active',
       )}
     >
-      <span className="mode-btn__icon flex h-8 w-8 shrink-0 items-center justify-center rounded-md border">
+      <span className="mode-btn__icon flex h-8 w-8 shrink-0 items-center justify-center rounded-md">
         {icon}
       </span>
       <span className="min-w-0 max-sm:hidden">

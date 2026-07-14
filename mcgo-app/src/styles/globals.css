@@ -54,6 +54,7 @@
 @layer base {
   html {
     color-scheme: dark light;
+    background-color: var(--canvas);
   }
 
   body {
@@ -70,6 +71,7 @@
 
   #root {
     min-height: 100vh;
+    background-color: var(--canvas);
   }
 
   ::selection {
@@ -94,7 +96,11 @@
   background: var(--canvas);
   box-sizing: border-box;
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--line) 88%, var(--green));
+  /* Soft frameless outline — no loud green stroke */
+  border: 1px solid color-mix(in srgb, var(--line) 55%, var(--canvas));
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--ink) 4%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--ink) 7%, transparent);
 }
 
 /* Transparent top drag strip, flush with window controls */
@@ -349,19 +355,17 @@
 }
 
 .mode-btn__icon {
-  border-color: transparent;
+  border: none;
   background: transparent;
   color: inherit;
   transition:
-    border-color 0.22s ease,
     background 0.22s ease,
     color 0.22s ease,
     transform 0.22s cubic-bezier(0.34, 1.2, 0.64, 1);
 }
 
 .mode-btn--active .mode-btn__icon {
-  border-color: color-mix(in srgb, var(--green) 35%, var(--line));
-  background: var(--raised);
+  background: transparent;
   color: var(--green);
   transform: scale(1.04);
 }
