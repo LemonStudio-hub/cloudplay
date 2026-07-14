@@ -89,6 +89,8 @@ jobs:
           $config = Get-Content "src-tauri\gen\windows\bundle.config.json" | ConvertFrom-Json
           $tauriConf = Get-Content "src-tauri\tauri.conf.json" | ConvertFrom-Json
 
+          $desc = if ($tauriConf.description) { $tauriConf.description } else { "$($tauriConf.productName) Desktop App" }
+
           $manifest = $template `
             -replace '\{\{identifier\}\}', $tauriConf.identifier `
             -replace '\{\{publisher\}\}', $config.publisher `
@@ -96,7 +98,7 @@ jobs:
             -replace '\{\{arch\}\}', '${{ matrix.arch }}' `
             -replace '\{\{displayName\}\}', $tauriConf.productName `
             -replace '\{\{publisherDisplayName\}\}', $config.publisherDisplayName `
-            -replace '\{\{description\}\}', $tauriConf.description `
+            -replace '\{\{description\}\}', $desc `
             -replace '\{\{exeName\}\}', "CloudPlay.exe"
 
           $manifest | Out-File -FilePath "$contentDir\AppxManifest.xml" -Encoding UTF8
