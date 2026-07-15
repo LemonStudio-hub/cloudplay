@@ -1,4 +1,5 @@
 import { memo, useCallback, useEffect, useState } from 'react';
+import { Copy, Minus, Square, X } from 'lucide-react';
 
 function isTauri(): boolean {
   return (
@@ -11,6 +12,13 @@ async function getAppWindow() {
   const { getCurrentWindow } = await import('@tauri-apps/api/window');
   return getCurrentWindow();
 }
+
+const iconProps = {
+  size: 12,
+  strokeWidth: 1.2,
+  absoluteStrokeWidth: true,
+  'aria-hidden': true as const,
+};
 
 /** Minimize / maximize / close — top-right corner (Windows layout). */
 export const WindowControls = memo(function WindowControls() {
@@ -76,9 +84,7 @@ export const WindowControls = memo(function WindowControls() {
         aria-label="最小化"
         tabIndex={-1}
       >
-        <svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden>
-          <path d="M2.25 6h7.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-        </svg>
+        <Minus {...iconProps} />
       </button>
       <button
         type="button"
@@ -87,34 +93,7 @@ export const WindowControls = memo(function WindowControls() {
         aria-label={maximized ? '还原' : '最大化'}
         tabIndex={-1}
       >
-        {maximized ? (
-          <svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden>
-            <path
-              d="M4 3.25h4.75V8H4V3.25Z"
-              stroke="currentColor"
-              strokeWidth="1.15"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M3.25 4.5H2.75v4.75h4.75v-.5"
-              stroke="currentColor"
-              strokeWidth="1.15"
-              strokeLinejoin="round"
-            />
-          </svg>
-        ) : (
-          <svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden>
-            <rect
-              x="2.75"
-              y="2.75"
-              width="6.5"
-              height="6.5"
-              rx="1"
-              stroke="currentColor"
-              strokeWidth="1.15"
-            />
-          </svg>
-        )}
+        {maximized ? <Copy {...iconProps} /> : <Square {...iconProps} />}
       </button>
       <button
         type="button"
@@ -123,14 +102,7 @@ export const WindowControls = memo(function WindowControls() {
         aria-label="关闭"
         tabIndex={-1}
       >
-        <svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden>
-          <path
-            d="M3.2 3.2l5.6 5.6M8.8 3.2l-5.6 5.6"
-            stroke="currentColor"
-            strokeWidth="1.2"
-            strokeLinecap="round"
-          />
-        </svg>
+        <X {...iconProps} />
       </button>
     </div>
   );

@@ -54,6 +54,7 @@
 @layer base {
   html {
     color-scheme: dark light;
+    background-color: var(--canvas);
   }
 
   body {
@@ -70,6 +71,7 @@
 
   #root {
     min-height: 100vh;
+    background-color: var(--canvas);
   }
 
   ::selection {
@@ -83,8 +85,11 @@
   }
 }
 
-/* Shell: sidebar + main only (no top/bottom chrome bars) */
+/* Shell: sidebar + main; top titlebar for window drag */
 .shell {
+  /* Shared mode-switch motion (sidebar pill + main pages) */
+  --mode-dur: 0.4s;
+  --mode-ease: cubic-bezier(0.32, 0.72, 0, 1);
   display: grid;
   grid-template-columns: 200px 1fr;
   grid-template-rows: 1fr;
@@ -94,10 +99,39 @@
   background: var(--canvas);
   box-sizing: border-box;
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--line) 88%, var(--green));
+  /* Soft frameless outline — no loud green stroke */
+  border: 1px solid color-mix(in srgb, var(--line) 55%, var(--canvas));
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--ink) 4%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--ink) 7%, transparent);
 }
 
-/* Sidebar brand = drag handle */
+/* Transparent top drag strip, flush with window controls */
+.titlebar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 60;
+  display: flex;
+  align-items: stretch;
+  height: 36px;
+  background: transparent;
+  pointer-events: none;
+}
+
+.titlebar__drag {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  pointer-events: auto;
+  app-region: drag;
+  -webkit-app-region: drag;
+  background: transparent;
+  cursor: default;
+}
+
+/* Sidebar brand = extra drag handle */
 .shell__brand {
   app-region: drag;
   -webkit-app-region: drag;
@@ -107,29 +141,27 @@
 /* Keep interactive controls clickable */
 .shell__aside nav,
 .shell__aside button,
+.titlebar .win-controls,
 .win-controls,
 .win-controls__btn {
   app-region: no-drag;
   -webkit-app-region: no-drag;
+  pointer-events: auto;
 }
 
-/* Window controls flush top-right of the frame */
+/* Window controls sit at the right end of the titlebar */
 .win-controls {
-  position: absolute;
-  top: 0;
-  right: 0;
-  z-index: 60;
+  position: relative;
+  z-index: 61;
   display: flex;
   align-items: stretch;
   flex-shrink: 0;
   height: 36px;
   border: none;
-  border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
-  border-left: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
-  border-radius: 0 0 0 8px;
+  border-radius: 0;
   overflow: hidden;
-  background: color-mix(in srgb, var(--panel) 88%, transparent);
-  backdrop-filter: blur(10px);
+  background: transparent;
+  pointer-events: auto;
 }
 
 .win-controls__btn {
@@ -146,10 +178,6 @@
   color: color-mix(in srgb, var(--mute) 90%, var(--ink));
   cursor: pointer;
   transition: color 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
-}
-
-.win-controls__btn + .win-controls__btn {
-  border-left: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
 }
 
 .win-controls__btn:hover {
@@ -218,12 +246,197 @@
 }
 
 .shell__main {
+  --titlebar-h: 36px;
+  /* top/bottom breathing room inside the scrollable band */
+  --main-pad-y: 1.75rem;
+  /* soft fade instead of hard clip at scroll edges */
+  --main-fade: 1.75rem;
   grid-row: 1;
   grid-column: 2;
-  overflow: auto;
+  display: grid;
+  grid-template-rows: var(--titlebar-h) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
+  overflow: hidden; /* scroll lives on the content band */
   min-height: 0;
-  /* top padding so content clears absolute window controls */
-  padding: 2.75rem 1.25rem 2rem;
+  padding: 0 1.25rem;
+  box-sizing: border-box;
+}
+
+/* Row 2: fixed viewport for page-stack (not a growing scroll of two pages) */
+.shell__main > * {
+  grid-row: 2;
+  grid-column: 1;
+  width: 100%;
+  max-width: 32rem;
+  justify-self: center;
+  align-self: stretch;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/*
+ * Two separate full interfaces in one viewport.
+ * Stack is a fixed-size stage; each panel covers the stage completely.
+ * Slide moves whole interfaces (±100% of stage), never a long stitched strip.
+ * Scroll / pad / fade live inside each panel — only the active page scrolls.
+ */
+.page-stack {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.page-panel {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: var(--main-pad-y) 0 calc(var(--main-pad-y) + 0.5rem);
+  display: flex;
+  flex-direction: column;
+  justify-content: safe center;
+  transition: transform var(--mode-dur) var(--mode-ease);
+  will-change: transform;
+  backface-visibility: hidden;
+  pointer-events: none;
+  z-index: 0;
+  /* hide scrollbar, keep scroll */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  /* soft edge fade on each interface */
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 var(--main-fade),
+    #000 calc(100% - var(--main-fade)),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 var(--main-fade),
+    #000 calc(100% - var(--main-fade)),
+    transparent 100%
+  );
+}
+
+.page-panel::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/*
+ * Direction matches sidebar order (host above, client below):
+ *   pill moves down → pages move down (client enters from above)
+ *   pill moves up   → pages move up   (host enters from below)
+ */
+.page-stack[data-mode='host'] .page-panel[data-page='host'] {
+  transform: translate3d(0, 0, 0);
+  z-index: 1;
+  pointer-events: auto;
+}
+
+/* Client waits above the stage */
+.page-stack[data-mode='host'] .page-panel[data-page='client'] {
+  transform: translate3d(0, -100%, 0);
+}
+
+.page-stack[data-mode='client'] .page-panel[data-page='client'] {
+  transform: translate3d(0, 0, 0);
+  z-index: 1;
+  pointer-events: auto;
+}
+
+/* Host waits below the stage */
+.page-stack[data-mode='client'] .page-panel[data-page='host'] {
+  transform: translate3d(0, 100%, 0);
+}
+
+/* Mode nav: sliding highlight pill (sized to the two buttons only) */
+.mode-nav {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--mode-gap, 0.25rem);
+  --mode-gap: 0.25rem;
+  flex: 0 0 auto;
+  width: 100%;
+}
+
+.mode-nav__pill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  z-index: 0;
+  height: calc((100% - var(--mode-gap)) / 2);
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--green) 9%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--green) 32%, transparent);
+  pointer-events: none;
+  transform: translate3d(0, 0, 0);
+  transition: transform var(--mode-dur) var(--mode-ease);
+  will-change: transform;
+}
+
+.mode-nav[data-mode='client'] .mode-nav__pill {
+  transform: translate3d(0, calc(100% + var(--mode-gap)), 0);
+}
+
+/* Mode switch: sidebar buttons */
+.mode-btn {
+  position: relative;
+  z-index: 1;
+  color: var(--mute);
+  background: transparent;
+  box-shadow: none;
+  transition:
+    color 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    background 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.2s ease;
+}
+
+.mode-btn:hover:not(.mode-btn--active) {
+  color: color-mix(in srgb, var(--ink) 82%, var(--mute));
+  background: color-mix(in srgb, var(--ink) 3.5%, transparent);
+}
+
+.mode-btn:active {
+  transform: scale(0.985);
+}
+
+.mode-btn--active {
+  color: var(--ink);
+  background: transparent;
+}
+
+.mode-btn__icon {
+  border: none;
+  background: transparent;
+  color: inherit;
+  transition: color 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.mode-btn--active .mode-btn__icon {
+  background: transparent;
+  color: var(--green);
+}
+
+.mode-btn__desc {
+  color: var(--mute);
+  transition: color 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.mode-btn--active .mode-btn__desc {
+  color: color-mix(in srgb, var(--mute) 88%, var(--green));
 }
 
 @media (max-width: 640px) {
@@ -244,28 +457,63 @@
   }
 
   .shell__main {
+    --titlebar-h: 32px;
+    --main-pad-y: 1rem;
     grid-row: 2;
     grid-column: 1;
-    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    grid-template-rows: none;
+    overflow: hidden;
+    padding: 0 1rem;
+    padding-top: 2.5rem;
+  }
+
+  .shell__main > * {
+    grid-row: auto;
+    flex: 1 1 auto;
+    min-height: 0;
+    height: auto;
+    max-width: none;
+  }
+
+  .page-panel {
+    justify-content: flex-start;
   }
 
   .shell__brand {
     padding: 0.35rem 0.5rem;
   }
 
+  /* Horizontal mode switch on small screens */
+  .mode-nav {
+    flex-direction: row;
+  }
+
+  .mode-nav__pill {
+    left: 0;
+    right: auto;
+    top: 0;
+    bottom: 0;
+    width: calc((100% - var(--mode-gap)) / 2);
+    height: auto;
+  }
+
+  .mode-nav[data-mode='client'] .mode-nav__pill {
+    transform: translate3d(calc(100% + var(--mode-gap)), 0, 0);
+  }
+
+  .titlebar {
+    height: 32px;
+  }
+
   .win-controls {
     height: 32px;
-    border-radius: 0 0 0 6px;
   }
 
   .win-controls__btn {
     width: 40px;
     height: 32px;
-  }
-
-  .shell__main {
-    /* leave room so content isn’t under window buttons */
-    padding-top: 2.5rem;
   }
 }
 
@@ -517,7 +765,13 @@
   .theme-switch__thumb,
   .theme-switch__icon,
   .field,
-  .shell {
+  .shell,
+  .page-switch,
+  .page-stack,
+  .page-panel,
+  .mode-btn,
+  .mode-btn__icon,
+  .mode-nav__pill {
     transition: none !important;
     animation: none !important;
   }
