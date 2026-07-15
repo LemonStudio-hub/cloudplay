@@ -44,13 +44,23 @@ $ContentDir = Join-Path $MsixDir "content_$Arch"
 if (Test-Path $ContentDir) { Remove-Item -Recurse -Force $ContentDir }
 New-Item -ItemType Directory -Path $ContentDir -Force | Out-Null
 
-# Copy built executable
-$ExeSource = Join-Path $TargetDir "x86_64-pc-windows-msvc\release\CloudPlay.exe"
+# Copy built executable (Tauri cargo package name is cloudplay-app)
+$ReleaseDir = Join-Path $TargetDir "x86_64-pc-windows-msvc\release"
+$ExeSource = Join-Path $ReleaseDir "cloudplay-app.exe"
 if (-not (Test-Path $ExeSource)) {
     Write-Error "Built executable not found at: $ExeSource"
     exit 1
 }
-Copy-Item $ExeSource $ContentDir
+Copy-Item $ExeSource (Join-Path $ContentDir "CloudPlay.exe")
+
+# Copy cloudflared sidecar binary
+$SidecarSource = Join-Path $ReleaseDir "cloudflared.exe"
+if (-not (Test-Path $SidecarSource)) {
+    Write-Error "Sidecar binary not found at: $SidecarSource"
+    exit 1
+}
+Copy-Item $SidecarSource $ContentDir
+Write-Host "  Sidecar: cloudflared.exe ($([math]::Round((Get-Item $SidecarSource).Length/1MB, 1)) MB)" -ForegroundColor Gray
 
 # Copy Assets
 $ContentAssets = Join-Path $ContentDir "Assets"

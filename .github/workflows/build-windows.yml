@@ -26,6 +26,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          lfs: true
 
       # ── Node.js + pnpm ──
       - uses: pnpm/action-setup@v4
@@ -51,8 +53,15 @@ jobs:
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
 
-      # ── 安装 Tauri CLI ──
+      # ── 安装 Tauri CLI（带缓存） ──
+      - name: Cache Tauri CLI
+        id: cache-tauri-cli
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/cargo-tauri.exe
+          key: tauri-cli-2-${{ runner.os }}
       - name: Install Tauri CLI
+        if: steps.cache-tauri-cli.outputs.cache-hit != 'true'
         run: cargo install tauri-cli --version "^2"
 
       # ── 构建 Tauri 应用（包含前端构建） ──
@@ -68,17 +77,33 @@ jobs:
           $contentDir = "target\msix\content_${{ matrix.arch }}"
           New-Item -ItemType Directory -Path $contentDir -Force
 
-          # 复制构建产物（Cargo 包名是 cloudplay-app）
-          $exePath = "src-tauri\target\x86_64-pc-windows-msvc\release\cloudplay-app.exe"
+          $releaseDir = "src-tauri\target\x86_64-pc-windows-msvc\release"
+
+          # 复制主程序（Cargo 包名是 cloudplay-app）
+          $exePath = "$releaseDir\cloudplay-app.exe"
           if (-not (Test-Path $exePath)) {
             Write-Error "Executable not found: $exePath"
             exit 1
           }
           Copy-Item $exePath "$contentDir\CloudPlay.exe"
 
+          # 复制 cloudflared sidecar 二进制
+          $sidecarPath = "$releaseDir\cloudflared.exe"
+          if (-not (Test-Path $sidecarPath)) {
+            Write-Error "Sidecar binary not found: $sidecarPath"
+            exit 1
+          }
+          Copy-Item $sidecarPath "$contentDir\cloudflared.exe"
+
           # 复制图标资源
           New-Item -ItemType Directory -Path "$contentDir\Assets" -Force
           Copy-Item "src-tauri\gen\windows\Assets\*" "$contentDir\Assets\" -Recurse
+
+          # 验证内容
+          Write-Host "MSIX content directory:"
+          Get-ChildItem $contentDir -Recurse | ForEach-Object {
+            Write-Host "  $($_.FullName.Replace($contentDir, '.'))  ($([math]::Round($_.Length/1MB, 1)) MB)"
+          }
 
       # ── 生成 AppxManifest.xml ──
       - name: Generate AppxManifest.xml
