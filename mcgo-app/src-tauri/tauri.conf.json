@@ -1,6 +1,6 @@
 {
   "productName": "CloudPlay",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "identifier": "app.cloudplay.lat",
   "build": {
     "beforeDevCommand": "npm run dev",

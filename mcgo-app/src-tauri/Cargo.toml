@@ -1,6 +1,6 @@
 [package]
 name = "cloudplay-app"
-version = "1.0.0"
+version = "1.0.1"
 edition = "2021"
 authors = ["CloudPlay Team <team@cloudplay.lat>"]
 description = "CloudPlay - 局域网游戏远程联机 Desktop Client"

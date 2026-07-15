@@ -1,6 +1,6 @@
 {
   "name": "cloudplay-app",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "CloudPlay - 局域网游戏远程联机 Desktop Client",
   "type": "module",
   "scripts": {
