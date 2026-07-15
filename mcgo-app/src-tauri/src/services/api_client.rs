@@ -1,3 +1,4 @@
+use std::time::Duration;
 use crate::models::TokenResponse;
 use reqwest::Client;
 
@@ -8,9 +9,13 @@ pub struct ApiClient {
 
 impl ApiClient {
     pub fn new(base_url: String) -> Self {
+        let client = Client::builder()
+            .timeout(Duration::from_secs(15))
+            .build()
+            .expect("Failed to create HTTP client");
         Self {
             base_url,
-            client: Client::new(),
+            client,
         }
     }
 
@@ -23,16 +28,22 @@ impl ApiClient {
             .json(&serde_json::json!({ "roomId": room_id }))
             .send()
             .await
-            .map_err(|e| format!("Network error: {}", e))?;
+            .map_err(|e| {
+                if e.is_timeout() {
+                    "请求超时，请检查网络连接".to_string()
+                } else {
+                    format!("网络错误: {}", e)
+                }
+            })?;
 
         if !response.status().is_success() {
             let status = response.status();
             let error_text = response.text().await.unwrap_or_default();
-            return Err(format!("API error ({}): {}", status, error_text));
+            return Err(format!("API 错误 ({}): {}", status, error_text));
         }
 
         let token_response: TokenResponse = response.json().await
-            .map_err(|e| format!("Failed to parse response: {}", e))?;
+            .map_err(|e| format!("解析响应失败: {}", e))?;
 
         Ok(token_response)
     }

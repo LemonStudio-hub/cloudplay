@@ -1,7 +1,7 @@
-import { FormEvent, useCallback, useMemo, useState } from 'react';
-import { Loader2, Play, Square } from 'lucide-react';
+import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { Loader2, Play, Square, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useAppStore } from '../store';
-import { startTunnel, stopTunnel } from '../services/tauri';
+import { startTunnel, stopTunnel, checkCloudflared } from '../services/tauri';
 import {
   buildHostname,
   sanitizeRoomId,
@@ -17,11 +17,13 @@ export function HostPage() {
   const hostname = useAppStore((s) => s.hostname);
   const error = useAppStore((s) => s.error);
   const localPort = useAppStore((s) => s.localPort);
+  const cloudflaredReady = useAppStore((s) => s.cloudflaredReady);
   const setTunnelStatus = useAppStore((s) => s.setTunnelStatus);
   const setHostname = useAppStore((s) => s.setHostname);
   const setError = useAppStore((s) => s.setError);
   const setLocalPort = useAppStore((s) => s.setLocalPort);
   const resetTunnel = useAppStore((s) => s.resetTunnel);
+  const setCloudflaredReady = useAppStore((s) => s.setCloudflaredReady);
 
   const [roomId, setRoomId] = useState('');
   const [fieldErrors, setFieldErrors] = useState<{
@@ -34,6 +36,17 @@ export function HostPage() {
     () => (roomId.trim().length >= 3 ? buildHostname(roomId) : null),
     [roomId],
   );
+
+  // 启动时检测 sidecar cloudflared 是否可用
+  useEffect(() => {
+    let dead = false;
+    checkCloudflared().then((ok) => {
+      if (!dead) setCloudflaredReady(ok);
+    });
+    return () => {
+      dead = true;
+    };
+  }, [setCloudflaredReady]);
 
   const handleStart = useCallback(async () => {
     const roomErr = validateRoomId(roomId);
@@ -89,6 +102,26 @@ export function HostPage() {
           把本机游戏端口暴露为可分享地址
         </p>
       </header>
+
+      {/* cloudflared 状态栏 */}
+      <section className="surface mb-4 p-4">
+        <div className="flex items-center gap-2">
+          {cloudflaredReady === null ? (
+            <Loader2 size={16} className="animate-spin shrink-0" style={{ color: 'var(--mute)' }} />
+          ) : cloudflaredReady ? (
+            <CheckCircle2 size={16} className="shrink-0" style={{ color: 'var(--green)' }} />
+          ) : (
+            <AlertCircle size={16} className="shrink-0" style={{ color: 'var(--danger)' }} />
+          )}
+          <span className="text-sm" style={{ color: 'var(--mute)' }}>
+            {cloudflaredReady === null
+              ? '正在检测隧道组件…'
+              : cloudflaredReady
+                ? '隧道组件已就绪'
+                : '隧道组件不可用，请重新安装应用'}
+          </span>
+        </div>
+      </section>
 
       <form onSubmit={onSubmit} className="surface p-5 space-y-4">
         <Input
@@ -162,7 +195,11 @@ export function HostPage() {
               variant="solid"
               fullWidth
               loading={tunnelStatus === 'connecting'}
-              disabled={!!fieldErrors.roomId || !!fieldErrors.port}
+              disabled={
+                !!fieldErrors.roomId ||
+                !!fieldErrors.port ||
+                cloudflaredReady !== true
+              }
             >
               {tunnelStatus === 'connecting' ? (
                 <>

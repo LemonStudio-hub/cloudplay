@@ -16,6 +16,28 @@
     "core:window:allow-show",
     "core:window:allow-hide",
     "core:window:allow-set-icon",
-    "core:image:default"
+    "core:image:default",
+    "shell:allow-execute",
+    "shell:allow-spawn",
+    "shell:allow-stdin-write",
+    "shell:allow-kill",
+    {
+      "identifier": "shell:allow-spawn",
+      "allow": [
+        {
+          "name": "binaries/cloudflared",
+          "sidecar": true
+        }
+      ]
+    },
+    {
+      "identifier": "shell:allow-execute",
+      "allow": [
+        {
+          "name": "binaries/cloudflared",
+          "sidecar": true
+        }
+      ]
+    }
   ]
 }

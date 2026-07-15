@@ -9,6 +9,7 @@ interface AppState {
   localPort: number;
   clientPort: number;
   apiOnline: boolean | null;
+  cloudflaredReady: boolean | null;  // null = 检测中
 
   setMode: (mode: AppMode) => void;
   setTunnelStatus: (status: TunnelStatus) => void;
@@ -17,6 +18,7 @@ interface AppState {
   setLocalPort: (port: number) => void;
   setClientPort: (port: number) => void;
   setApiOnline: (online: boolean | null) => void;
+  setCloudflaredReady: (ready: boolean | null) => void;
   resetTunnel: () => void;
   isBusy: () => boolean;
 }
@@ -29,6 +31,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   localPort: 25565,
   clientPort: 25566,
   apiOnline: null,
+  cloudflaredReady: null,
 
   setMode: (mode) => set({ mode }),
   setTunnelStatus: (tunnelStatus) => set({ tunnelStatus }),
@@ -37,6 +40,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   setLocalPort: (localPort) => set({ localPort }),
   setClientPort: (clientPort) => set({ clientPort }),
   setApiOnline: (apiOnline) => set({ apiOnline }),
+  setCloudflaredReady: (cloudflaredReady) => set({ cloudflaredReady }),
   resetTunnel: () =>
     set({
       tunnelStatus: 'idle',

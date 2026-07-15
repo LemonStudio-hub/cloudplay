@@ -12,6 +12,7 @@ target/
 *.dmg
 *.deb
 *.AppImage
+!mcgo-app/src-tauri/binaries/*
 
 # IDE
 .vscode/
