@@ -53,7 +53,7 @@ jobs:
       - name: Download CloudflareSpeedTest
         shell: pwsh
         run: |
-          $binDir = "mcgo-app/src-tauri/binaries"
+          $binDir = "src-tauri/binaries"
           $cfstExe = "$binDir/CloudflareSpeedTest-x86_64-pc-windows-msvc.exe"
 
           if (Test-Path $cfstExe) {
