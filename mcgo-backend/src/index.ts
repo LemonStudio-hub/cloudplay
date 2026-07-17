@@ -4,7 +4,7 @@ import { rateLimiter } from './middleware/rate-limiter';
 
 type Bindings = {
   KV_STORE: KVNamespace;
-  ACCOUNT_ID: string;
+  CF_API_ACCOUNT_ID: string;
   TUNNEL_ID: string;
   CLOUDFLARE_API_TOKEN: string;
 };
@@ -47,7 +47,7 @@ app.post('/api/token', async (c) => {
     }
 
     const hostname = `${roomId}.cloudplay.lat`;
-    const { ACCOUNT_ID, TUNNEL_ID, CLOUDFLARE_API_TOKEN } = c.env;
+    const { CF_API_ACCOUNT_ID: ACCOUNT_ID, TUNNEL_ID, CLOUDFLARE_API_TOKEN } = c.env;
 
     // 2. Call Cloudflare API to get tunnel token
     const resp = await fetch(

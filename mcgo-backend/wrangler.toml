@@ -1,16 +1,17 @@
 name = "cloudplay-backend"
 main = "src/index.ts"
 compatibility_date = "2024-12-18"
+account_id = "e28c02029d0b99ca5d7f0baf95de7519"
 
 # KV namespace for rate limiting
 [[kv_namespaces]]
 binding = "KV_STORE"
-id = "ce88764dde894e019470b154c30460bf"
+id = "4016c47a14014d1ab98bf5b8204dc6f9"
 
 # Environment variables
 [vars]
-ACCOUNT_ID = "e82cfd2caf59231ca62061a3454df254"
-TUNNEL_ID = "6460e148-4973-4ad4-a0fc-e766b8a7b2da"
+CF_API_ACCOUNT_ID = "e28c02029d0b99ca5d7f0baf95de7519"
+TUNNEL_ID = "8b880583-adf9-4dc7-a326-ae543af5263e"
 
 # Sensitive variables - inject via: wrangler secret put CLOUDFLARE_API_TOKEN
 # CLOUDFLARE_API_TOKEN = "your_api_token"

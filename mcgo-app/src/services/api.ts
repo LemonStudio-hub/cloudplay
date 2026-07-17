@@ -11,7 +11,7 @@ function resolveApiBase(): string {
 
   if (typeof window !== 'undefined') {
     const host = window.location.hostname;
-    if (host === 'localhost' || host === '127.0.0.1' || host === 'tauri.localhost') {
+    if (host === 'localhost' || host === '127.0.0.1') {
       return DEV_API;
     }
   }
