@@ -1,6 +1,6 @@
 {
-  "publisher": "CN=CloudPlay",
-  "publisherDisplayName": "CloudPlay Team",
+  "publisher": "CN=88264862-8029-4C85-A740-2E7CB3BC9C20",
+  "publisherDisplayName": "柠檬叶工作室",
   "capabilities": {
     "general": ["internetClient", "internetClientServer", "privateNetworkClientServer"]
   },
