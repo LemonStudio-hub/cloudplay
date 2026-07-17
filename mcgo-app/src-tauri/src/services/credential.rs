@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use keyring::Entry;
 
 const SERVICE_NAME: &str = "cloudplay";

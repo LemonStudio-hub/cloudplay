@@ -337,6 +337,7 @@
  * Direction matches sidebar order (host above, client below):
  *   pill moves down → pages move down (client enters from above)
  *   pill moves up   → pages move up   (host enters from below)
+ * Settings page slides in from the right.
  */
 .page-stack[data-mode='host'] .page-panel[data-page='host'] {
   transform: translate3d(0, 0, 0);
@@ -349,6 +350,11 @@
   transform: translate3d(0, -100%, 0);
 }
 
+/* Settings waits to the right */
+.page-stack[data-mode='host'] .page-panel[data-page='settings'] {
+  transform: translate3d(100%, 0, 0);
+}
+
 .page-stack[data-mode='client'] .page-panel[data-page='client'] {
   transform: translate3d(0, 0, 0);
   z-index: 1;
@@ -358,6 +364,28 @@
 /* Host waits below the stage */
 .page-stack[data-mode='client'] .page-panel[data-page='host'] {
   transform: translate3d(0, 100%, 0);
+}
+
+/* Settings waits to the right */
+.page-stack[data-mode='client'] .page-panel[data-page='settings'] {
+  transform: translate3d(100%, 0, 0);
+}
+
+/* Settings on stage */
+.page-stack[data-mode='settings'] .page-panel[data-page='settings'] {
+  transform: translate3d(0, 0, 0);
+  z-index: 1;
+  pointer-events: auto;
+}
+
+/* Host waits to the left when settings active */
+.page-stack[data-mode='settings'] .page-panel[data-page='host'] {
+  transform: translate3d(-100%, 0, 0);
+}
+
+/* Client waits to the left when settings active */
+.page-stack[data-mode='settings'] .page-panel[data-page='client'] {
+  transform: translate3d(-100%, 0, 0);
 }
 
 /* Mode nav: sliding highlight pill (sized to the two buttons only) */
@@ -389,6 +417,11 @@
 
 .mode-nav[data-mode='client'] .mode-nav__pill {
   transform: translate3d(0, calc(100% + var(--mode-gap)), 0);
+}
+
+/* Hide pill when settings is active (settings button is outside mode-nav) */
+.mode-nav[data-mode='settings'] .mode-nav__pill {
+  opacity: 0;
 }
 
 /* Mode switch: sidebar buttons */
@@ -501,6 +534,10 @@
 
   .mode-nav[data-mode='client'] .mode-nav__pill {
     transform: translate3d(calc(100% + var(--mode-gap)), 0, 0);
+  }
+
+  .mode-nav[data-mode='settings'] .mode-nav__pill {
+    opacity: 0;
   }
 
   .titlebar {

@@ -2,12 +2,16 @@ import { lazy, Suspense, useEffect } from 'react';
 import { useAppStore } from './store';
 import { Sidebar } from './components/Sidebar';
 import { TitleBar } from './components/TitleBar';
+import type { AppMode } from './types';
 
 const HostPage = lazy(() =>
   import('./pages/HostPage').then((m) => ({ default: m.HostPage })),
 );
 const ClientPage = lazy(() =>
   import('./pages/ClientPage').then((m) => ({ default: m.ClientPage })),
+);
+const SettingsPage = lazy(() =>
+  import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage })),
 );
 
 function Fallback() {
@@ -23,10 +27,10 @@ function Fallback() {
 }
 
 /**
- * Two separate full interfaces sharing one stage.
- * Only one is on-stage; the other sits a full viewport away and slides in as a whole page.
+ * Three full interfaces sharing one stage.
+ * Only one is on-stage; the others sit a full viewport away and slide in as a whole page.
  */
-function PageStack({ mode }: { mode: 'host' | 'client' }) {
+function PageStack({ mode }: { mode: AppMode }) {
   return (
     <div className="page-stack" data-mode={mode}>
       <div
@@ -43,6 +47,13 @@ function PageStack({ mode }: { mode: 'host' | 'client' }) {
       >
         <ClientPage />
       </div>
+      <div
+        className="page-panel"
+        data-page="settings"
+        aria-hidden={mode !== 'settings'}
+      >
+        <SettingsPage />
+      </div>
     </div>
   );
 }
@@ -53,6 +64,7 @@ export default function App() {
   useEffect(() => {
     void import('./pages/HostPage');
     void import('./pages/ClientPage');
+    void import('./pages/SettingsPage');
   }, []);
 
   return (

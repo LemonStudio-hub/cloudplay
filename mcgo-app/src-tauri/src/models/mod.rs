@@ -11,6 +11,50 @@ pub struct AppState {
     pub current_hostname: Arc<Mutex<Option<String>>>,
 }
 
+/// Log entry emitted to the frontend via Tauri events
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LogEntryPayload {
+    pub level: String,      // "info" | "warn" | "error"
+    pub category: String,   // "tunnel" | "system"
+    pub message: String,
+    pub data: Option<String>,
+}
+
+impl LogEntryPayload {
+    pub fn info(category: &str, message: impl Into<String>) -> Self {
+        Self {
+            level: "info".into(),
+            category: category.into(),
+            message: message.into(),
+            data: None,
+        }
+    }
+
+    pub fn warn(category: &str, message: impl Into<String>) -> Self {
+        Self {
+            level: "warn".into(),
+            category: category.into(),
+            message: message.into(),
+            data: None,
+        }
+    }
+
+    pub fn error(category: &str, message: impl Into<String>) -> Self {
+        Self {
+            level: "error".into(),
+            category: category.into(),
+            message: message.into(),
+            data: None,
+        }
+    }
+
+    pub fn with_data(mut self, data: impl std::fmt::Display) -> Self {
+        self.data = Some(data.to_string());
+        self
+    }
+}
+
 /// Token API response
 #[derive(Debug, Deserialize)]
 pub struct TokenResponse {
@@ -23,6 +67,7 @@ pub struct TokenResponse {
 pub struct TokenData {
     pub hostname: String,
     pub token: String,
+    #[allow(dead_code)]
     #[serde(rename = "expiresIn")]
     pub expires_in: u64,
 }
@@ -40,4 +85,22 @@ pub struct StartTunnelResponse {
     pub success: bool,
     pub hostname: Option<String>,
     pub error: Option<String>,
+}
+
+/// Speed test result
+#[derive(Debug, Clone, Serialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct SpeedTestResult {
+    pub ip: String,
+    pub latency_ms: f64,
+    pub loss_percent: f64,
+    pub speed_mbps: f64,
+}
+
+/// Speed optimization status
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SpeedStatus {
+    pub enabled: bool,
+    pub current_ip: Option<String>,
 }

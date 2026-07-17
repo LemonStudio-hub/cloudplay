@@ -1,7 +1,8 @@
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use tauri::AppHandle;
+use tauri::{AppHandle, Emitter};
 use tauri_plugin_shell::{ShellExt, process::CommandChild};
+use crate::models::LogEntryPayload;
 
 pub struct TunnelManager {
     child: Arc<Mutex<Option<CommandChild>>>,
@@ -32,25 +33,37 @@ impl TunnelManager {
                 "启动 cloudflared 失败，请确认应用完整性".to_string()
             })?;
 
-        // 监听 sidecar 输出用于日志
+        // Clone app handle for the log-emitting task
+        let app_handle = app.clone();
+
+        // 监听 sidecar 输出，同时 emit 到前端
         tokio::spawn(async move {
             use tauri_plugin_shell::process::CommandEvent;
             while let Some(event) = rx.recv().await {
                 match event {
                     CommandEvent::Stdout(line) => {
-                        let msg = String::from_utf8_lossy(&line);
+                        let msg = String::from_utf8_lossy(&line).trim().to_string();
                         log::info!("[cloudflared:stdout] {}", msg);
+                        let _ = app_handle.emit("log://entry",
+                            LogEntryPayload::info("tunnel", &msg));
                     }
                     CommandEvent::Stderr(line) => {
-                        let msg = String::from_utf8_lossy(&line);
+                        let msg = String::from_utf8_lossy(&line).trim().to_string();
                         log::error!("[cloudflared:stderr] {}", msg);
+                        let _ = app_handle.emit("log://entry",
+                            LogEntryPayload::error("tunnel", &msg));
                     }
                     CommandEvent::Terminated(status) => {
-                        log::info!("[cloudflared] 进程退出: {:?}", status);
+                        let msg = format!("隧道进程退出: {:?}", status);
+                        log::info!("[cloudflared] {}", msg);
+                        let _ = app_handle.emit("log://entry",
+                            LogEntryPayload::info("tunnel", &msg));
                         break;
                     }
                     CommandEvent::Error(err) => {
                         log::error!("[cloudflared:error] {}", err);
+                        let _ = app_handle.emit("log://entry",
+                            LogEntryPayload::error("tunnel", &err));
                     }
                     _ => {}
                 }
@@ -63,11 +76,13 @@ impl TunnelManager {
     }
 
     /// Stop tunnel
-    pub async fn stop(&self) -> Result<(), String> {
+    pub async fn stop(&self, app: &AppHandle) -> Result<(), String> {
         let mut guard = self.child.lock().await;
         if let Some(child) = guard.take() {
             child.kill().map_err(|e| format!("停止隧道失败: {}", e))?;
             log::info!("Tunnel stopped");
+            let _ = app.emit("log://entry",
+                LogEntryPayload::info("tunnel", "隧道进程已终止"));
         }
         Ok(())
     }

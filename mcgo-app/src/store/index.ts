@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { AppMode, TunnelStatus } from '../types';
+import { logger } from '../lib/logger';
 
 interface AppState {
   mode: AppMode;
@@ -33,10 +34,24 @@ export const useAppStore = create<AppState>((set, get) => ({
   apiOnline: null,
   cloudflaredReady: null,
 
-  setMode: (mode) => set({ mode }),
-  setTunnelStatus: (tunnelStatus) => set({ tunnelStatus }),
+  setMode: (mode) => {
+    logger.info('app', `Mode: ${mode}`);
+    set({ mode });
+  },
+  setTunnelStatus: (tunnelStatus) => {
+    const prev = get().tunnelStatus;
+    if (prev !== tunnelStatus) {
+      logger.info('app', `Tunnel: ${prev} → ${tunnelStatus}`);
+    }
+    set({ tunnelStatus });
+  },
   setHostname: (hostname) => set({ hostname }),
-  setError: (error) => set({ error }),
+  setError: (error) => {
+    if (error) {
+      logger.error('app', error);
+    }
+    set({ error });
+  },
   setLocalPort: (localPort) => set({ localPort }),
   setClientPort: (clientPort) => set({ clientPort }),
   setApiOnline: (apiOnline) => set({ apiOnline }),

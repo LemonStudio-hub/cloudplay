@@ -11,6 +11,8 @@ import {
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { CopyField } from '../components/ui/CopyField';
+import { logger } from '../lib/logger';
+import { useI18n } from '../i18n';
 
 export function HostPage() {
   const tunnelStatus = useAppStore((s) => s.tunnelStatus);
@@ -24,6 +26,7 @@ export function HostPage() {
   const setLocalPort = useAppStore((s) => s.setLocalPort);
   const resetTunnel = useAppStore((s) => s.resetTunnel);
   const setCloudflaredReady = useAppStore((s) => s.setCloudflaredReady);
+  const { t } = useI18n();
 
   const [roomId, setRoomId] = useState('');
   const [fieldErrors, setFieldErrors] = useState<{
@@ -49,13 +52,17 @@ export function HostPage() {
   }, [setCloudflaredReady]);
 
   const handleStart = useCallback(async () => {
-    const roomErr = validateRoomId(roomId);
-    const portErr = validatePort(localPort);
+    const roomErrKey = validateRoomId(roomId);
+    const portErrKey = validatePort(localPort);
+    const roomErr = roomErrKey ? t(roomErrKey as any) : null;
+    const portErr = portErrKey ? t(portErrKey as any) : null;
     setFieldErrors({ roomId: roomErr, port: portErr });
     if (roomErr || portErr) {
+      logger.warn('app', '表单验证失败', { roomId, localPort, roomErr, portErr });
       setError(roomErr || portErr);
       return;
     }
+    logger.info('app', '用户点击启动隧道', { roomId: roomId.trim(), localPort });
     setTunnelStatus('connecting');
     setError(null);
     try {
@@ -64,23 +71,26 @@ export function HostPage() {
         setHostname(res.hostname);
         setTunnelStatus('running');
       } else {
-        setError(res.error || '启动失败');
+        setError(res.error || t('host.startFailed'));
         setTunnelStatus('error');
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : '未知错误');
+      const errMsg = e instanceof Error ? e.message : t('host.unknownError');
+      logger.error('app', '启动隧道异常', { error: errMsg });
+      setError(errMsg);
       setTunnelStatus('error');
     }
-  }, [roomId, localPort, setTunnelStatus, setHostname, setError]);
+  }, [roomId, localPort, setTunnelStatus, setHostname, setError, t]);
 
   const handleStop = useCallback(async () => {
+    logger.info('app', '用户点击停止隧道');
     const res = await stopTunnel();
     if (!res.success) {
-      setError(res.error || '停止失败');
+      setError(res.error || t('host.stopFailed'));
       return;
     }
     resetTunnel();
-  }, [resetTunnel, setError]);
+  }, [resetTunnel, setError, t]);
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -97,9 +107,9 @@ export function HostPage() {
         >
           Host mode
         </p>
-        <h2 className="mt-1 text-xl font-semibold tracking-tight">开服</h2>
+        <h2 className="mt-1 text-xl font-semibold tracking-tight">{t('host.title')}</h2>
         <p className="mt-1 text-sm" style={{ color: 'var(--mute)' }}>
-          把本机游戏端口暴露为可分享地址
+          {t('host.subtitle')}
         </p>
       </header>
 
@@ -115,10 +125,10 @@ export function HostPage() {
           )}
           <span className="text-sm" style={{ color: 'var(--mute)' }}>
             {cloudflaredReady === null
-              ? '正在检测隧道组件…'
+              ? t('host.cloudflared.checking')
               : cloudflaredReady
-                ? '隧道组件已就绪'
-                : '隧道组件不可用，请重新安装应用'}
+                ? t('host.cloudflared.ready')
+                : t('host.cloudflared.unavailable')}
           </span>
         </div>
       </section>
@@ -126,14 +136,14 @@ export function HostPage() {
       <form onSubmit={onSubmit} className="surface p-5 space-y-4">
         <Input
           name="roomId"
-          label="房间 ID"
+          label={t('host.roomId')}
           value={roomId}
           onChange={(e) => {
             const v = sanitizeRoomId(e.target.value);
             setRoomId(v);
             setFieldErrors((f) => ({
               ...f,
-              roomId: v ? validateRoomId(v) : null,
+              roomId: v ? (validateRoomId(v) ? t(validateRoomId(v) as any) : null) : null,
             }));
           }}
           placeholder="my-room"
@@ -142,7 +152,7 @@ export function HostPage() {
           autoComplete="off"
           spellCheck={false}
           error={fieldErrors.roomId}
-          hint="3–20 位字母数字、下划线、连字符"
+          hint={t('host.roomIdHint')}
         />
 
         {preview && !busy && (
@@ -154,7 +164,7 @@ export function HostPage() {
               color: 'var(--mute)',
             }}
           >
-            将生成{' '}
+            {t('host.preview')}{' '}
             <code className="mono" style={{ color: 'var(--green)' }}>
               {preview}
             </code>
@@ -163,31 +173,32 @@ export function HostPage() {
 
         <Input
           name="localPort"
-          label="本地端口"
+          label={t('host.port')}
           type="number"
           value={localPort || ''}
           onChange={(e) => {
             const p = parseInt(e.target.value, 10);
             if (Number.isNaN(p)) {
               setLocalPort(0);
-              setFieldErrors((f) => ({ ...f, port: '无效端口' }));
+              setFieldErrors((f) => ({ ...f, port: t('host.invalidPort') }));
               return;
             }
             setLocalPort(p);
-            setFieldErrors((f) => ({ ...f, port: validatePort(p) }));
+            const portErrKey = validatePort(p);
+            setFieldErrors((f) => ({ ...f, port: portErrKey ? t(portErrKey as any) : null }));
           }}
           disabled={busy}
           min={1}
           max={65535}
           error={fieldErrors.port}
-          hint="默认 25565"
+          hint={t('host.portHint')}
         />
 
         <div className="pt-1">
           {tunnelStatus === 'running' ? (
             <Button type="submit" variant="danger" fullWidth>
               <Square size={15} />
-              停止隧道
+              {t('host.stop')}
             </Button>
           ) : (
             <Button
@@ -204,12 +215,12 @@ export function HostPage() {
               {tunnelStatus === 'connecting' ? (
                 <>
                   <Loader2 size={15} className="animate-spin" />
-                  启动中…
+                  {t('host.starting')}
                 </>
               ) : (
                 <>
                   <Play size={15} />
-                  启动隧道
+                  {t('host.start')}
                 </>
               )}
             </Button>
@@ -232,13 +243,13 @@ export function HostPage() {
             Live
           </p>
           <p className="mt-1 text-sm" style={{ color: 'var(--mute)' }}>
-            分享地址给好友
+            {t('host.share')}
           </p>
           <div className="mt-3">
             <CopyField value={hostname} />
           </div>
           <p className="mt-3 text-2xs" style={{ color: 'var(--mute)' }}>
-            确保游戏服务监听在端口 {localPort}
+            {t('host.portInstruction', { port: localPort })}
           </p>
         </section>
       )}
@@ -261,9 +272,9 @@ export function HostPage() {
         className="mt-6 space-y-2 border-t pt-5 text-2xs"
         style={{ borderColor: 'var(--line)', color: 'var(--mute)' }}
       >
-        <li>1. 填写房间 ID 与游戏端口</li>
-        <li>2. 启动隧道并复制地址</li>
-        <li>3. 好友在「联机者」中连接</li>
+        <li>{t('host.steps.1')}</li>
+        <li>{t('host.steps.2')}</li>
+        <li>{t('host.steps.3')}</li>
       </ol>
     </div>
   );

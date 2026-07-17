@@ -1,5 +1,5 @@
-use tauri::{AppHandle, State};
-use crate::models::{AppState, StartTunnelRequest, StartTunnelResponse};
+use tauri::{AppHandle, Emitter, State};
+use crate::models::{AppState, LogEntryPayload, StartTunnelRequest, StartTunnelResponse};
 use crate::services::port_scanner::is_port_available;
 
 #[tauri::command]
@@ -9,21 +9,32 @@ pub async fn start_tunnel(
     request: StartTunnelRequest,
 ) -> Result<StartTunnelResponse, String> {
     log::info!("Starting tunnel for room: {}, port: {}", request.room_id, request.local_port);
+    let _ = app.emit("log://entry", LogEntryPayload::info(
+        "tunnel",
+        format!("开始启动隧道: 房间={}, 端口={}", request.room_id, request.local_port),
+    ));
 
     // 1. Check if port is available
     if !is_port_available(request.local_port) {
+        let msg = format!("端口 {} 已被占用", request.local_port);
+        log::warn!("{}", msg);
+        let _ = app.emit("log://entry", LogEntryPayload::warn("tunnel", &msg));
         return Ok(StartTunnelResponse {
             success: false,
             hostname: None,
-            error: Some(format!("端口 {} 已被占用，请更换端口或关闭占用该端口的程序", request.local_port)),
+            error: Some(format!("{}，请更换端口或关闭占用该端口的程序", msg)),
         });
     }
 
     // 2. Request token from Worker API
+    let _ = app.emit("log://entry", LogEntryPayload::info("tunnel", "请求隧道令牌…"));
     let api_client = &state.api_client;
     let token_response = match api_client.request_token(&request.room_id).await {
         Ok(resp) => resp,
         Err(e) => {
+            log::error!("Token request failed: {}", e);
+            let _ = app.emit("log://entry",
+                LogEntryPayload::error("tunnel", &e).with_data("API 请求失败"));
             return Ok(StartTunnelResponse {
                 success: false,
                 hostname: None,
@@ -33,20 +44,27 @@ pub async fn start_tunnel(
     };
 
     if !token_response.success {
+        let err_msg = token_response.error.unwrap_or_else(|| "获取隧道令牌失败".to_string());
+        log::error!("Token response error: {}", err_msg);
+        let _ = app.emit("log://entry",
+            LogEntryPayload::error("tunnel", &err_msg));
         return Ok(StartTunnelResponse {
             success: false,
             hostname: None,
-            error: token_response.error.or_else(|| Some("获取隧道令牌失败".to_string())),
+            error: Some(err_msg),
         });
     }
 
     let token_data = match token_response.data {
         Some(data) => data,
         None => {
+            let msg = "响应数据异常：缺少令牌信息";
+            log::error!("{}", msg);
+            let _ = app.emit("log://entry", LogEntryPayload::error("tunnel", msg));
             return Ok(StartTunnelResponse {
                 success: false,
                 hostname: None,
-                error: Some("响应数据异常：缺少令牌信息".to_string()),
+                error: Some(msg.to_string()),
             });
         }
     };
@@ -57,9 +75,14 @@ pub async fn start_tunnel(
     *state.current_hostname.lock().await = Some(hostname.clone());
 
     // 4. Start cloudflared tunnel via sidecar
+    let _ = app.emit("log://entry",
+        LogEntryPayload::info("tunnel", format!("启动 cloudflared 侧进程…")));
     let tunnel_manager = &state.tunnel_manager;
     if let Err(e) = tunnel_manager.start_with_token(&app, &token_data.token).await {
         *state.current_hostname.lock().await = None;
+        log::error!("Failed to start tunnel: {}", e);
+        let _ = app.emit("log://entry",
+            LogEntryPayload::error("tunnel", &e));
         return Ok(StartTunnelResponse {
             success: false,
             hostname: None,
@@ -68,6 +91,8 @@ pub async fn start_tunnel(
     }
 
     log::info!("Tunnel started successfully: {}", hostname);
+    let _ = app.emit("log://entry",
+        LogEntryPayload::info("tunnel", format!("隧道已启动: {}", hostname)));
 
     Ok(StartTunnelResponse {
         success: true,
@@ -77,14 +102,16 @@ pub async fn start_tunnel(
 }
 
 #[tauri::command]
-pub async fn stop_tunnel(state: State<'_, AppState>) -> Result<(), String> {
+pub async fn stop_tunnel(app: AppHandle, state: State<'_, AppState>) -> Result<(), String> {
     log::info!("Stopping tunnel");
+    let _ = app.emit("log://entry", LogEntryPayload::info("tunnel", "正在停止隧道…"));
 
     let tunnel_manager = &state.tunnel_manager;
-    tunnel_manager.stop().await?;
+    tunnel_manager.stop(&app).await?;
 
     *state.current_hostname.lock().await = None;
 
     log::info!("Tunnel stopped");
+    let _ = app.emit("log://entry", LogEntryPayload::info("tunnel", "隧道已停止"));
     Ok(())
 }

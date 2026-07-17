@@ -1,6 +1,6 @@
 {
   "productName": "CloudPlay",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "identifier": "app.cloudplay.lat",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -33,7 +33,7 @@
   "bundle": {
     "active": true,
     "targets": "all",
-    "externalBin": ["binaries/cloudflared"],
+    "externalBin": ["binaries/cloudflared", "binaries/CloudflareSpeedTest"],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

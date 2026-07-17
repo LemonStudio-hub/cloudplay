@@ -42,6 +42,10 @@ pub fn run() {
             commands::tunnel::stop_tunnel,
             commands::port::check_port,
             commands::cloudflared::check_cloudflared,
+            commands::speed::run_speed_test,
+            commands::speed::apply_speed_optimization,
+            commands::speed::remove_speed_optimization,
+            commands::speed::get_speed_status,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -16,7 +16,7 @@ export interface StartTunnelResponse {
 
 export type TunnelStatus = 'idle' | 'connecting' | 'running' | 'error';
 
-export type AppMode = 'host' | 'client';
+export type AppMode = 'host' | 'client' | 'settings';
 
 export interface TunnelState {
   status: TunnelStatus;

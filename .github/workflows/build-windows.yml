@@ -49,6 +49,40 @@ jobs:
         with:
           workspaces: mcgo-app/src-tauri -> target
 
+      # ── 下载 CloudflareSpeedTest ──
+      - name: Download CloudflareSpeedTest
+        shell: pwsh
+        run: |
+          $binDir = "mcgo-app/src-tauri/binaries"
+          $cfstExe = "$binDir/CloudflareSpeedTest-x86_64-pc-windows-msvc.exe"
+
+          if (Test-Path $cfstExe) {
+            Write-Host "CloudflareSpeedTest already exists, skipping download"
+            exit 0
+          }
+
+          Write-Host "Downloading CloudflareSpeedTest..."
+          $url = "https://github.com/XIU2/CloudflareSpeedTest/releases/latest/download/cfst_windows_amd64.zip"
+          $zipPath = "$env:TEMP/cfst_windows_amd64.zip"
+          Invoke-WebRequest -Uri $url -OutFile $zipPath -UseBasicParsing
+
+          $extractDir = "$env:TEMP/cfst_extract"
+          Expand-Archive -Path $zipPath -DestinationPath $extractDir -Force
+
+          $srcExe = Get-ChildItem -Path $extractDir -Filter "cfst.exe" -Recurse | Select-Object -First 1
+          if (-not $srcExe) {
+            Write-Error "cfst.exe not found in archive"
+            exit 1
+          }
+
+          Copy-Item $srcExe.FullName $cfstExe
+          Write-Host "CloudflareSpeedTest installed: $cfstExe"
+          (Get-Item $cfstExe).Length / 1MB | ForEach-Object { Write-Host "  Size: $([math]::Round($_, 1)) MB" }
+
+          # Cleanup
+          Remove-Item $zipPath -Force -ErrorAction SilentlyContinue
+          Remove-Item $extractDir -Recurse -Force -ErrorAction SilentlyContinue
+
       # ── 安装前端依赖 ──
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
@@ -94,6 +128,14 @@ jobs:
             exit 1
           }
           Copy-Item $sidecarPath "$contentDir\cloudflared.exe"
+
+          # 复制 CloudflareSpeedTest sidecar 二进制
+          $cfstPath = "$releaseDir\CloudflareSpeedTest.exe"
+          if (Test-Path $cfstPath) {
+            Copy-Item $cfstPath "$contentDir\CloudflareSpeedTest.exe"
+          } else {
+            Write-Host "Warning: CloudflareSpeedTest.exe not found, skipping"
+          }
 
           # 复制图标资源
           New-Item -ItemType Directory -Path "$contentDir\Assets" -Force

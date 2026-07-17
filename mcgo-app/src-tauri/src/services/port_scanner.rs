@@ -6,6 +6,7 @@ pub fn is_port_available(port: u16) -> bool {
 }
 
 /// Find an available port starting from the given port
+#[allow(dead_code)]
 pub fn find_available_port(start: u16, max_attempts: u16) -> Option<u16> {
     for port in start..=start.saturating_add(max_attempts) {
         if is_port_available(port) {

@@ -1,9 +1,10 @@
 import { memo, useCallback, useEffect, type ReactNode } from 'react';
-import { Server, Users } from 'lucide-react';
+import { Server, Users, Settings as SettingsIcon } from 'lucide-react';
 import { useAppStore } from '../store';
 import { AppMode } from '../types';
 import { Logo } from './Logo';
 import { useTheme } from '../hooks/useTheme';
+import { useI18n } from '../i18n';
 import { healthCheck } from '../services/api';
 import { cn } from '../lib/cn';
 
@@ -18,6 +19,7 @@ export const Sidebar = memo(function Sidebar() {
   const resetTunnel = useAppStore((s) => s.resetTunnel);
   const setApiOnline = useAppStore((s) => s.setApiOnline);
   const { theme, toggle } = useTheme();
+  const { t } = useI18n();
 
   useEffect(() => {
     let dead = false;
@@ -36,13 +38,13 @@ export const Sidebar = memo(function Sidebar() {
   const switchMode = useCallback(
     (next: AppMode) => {
       if (next === mode) return;
-      if (tunnelStatus === 'running' || tunnelStatus === 'connecting') {
-        if (!window.confirm('切换模式将停止当前会话，是否继续？')) return;
+      if (next !== 'settings' && (tunnelStatus === 'running' || tunnelStatus === 'connecting')) {
+        if (!window.confirm(t('sidebar.switchConfirm'))) return;
+        resetTunnel();
       }
-      resetTunnel();
       setMode(next);
     },
-    [mode, tunnelStatus, resetTunnel, setMode],
+    [mode, tunnelStatus, resetTunnel, setMode, t],
   );
 
   const statusColor =
@@ -54,7 +56,16 @@ export const Sidebar = memo(function Sidebar() {
           ? 'var(--danger)'
           : 'var(--mute)';
 
-  const port = mode === 'host' ? localPort : clientPort;
+  const port = mode === 'host' ? localPort : mode === 'client' ? clientPort : null;
+
+  const statusLabel =
+    tunnelStatus === 'idle'
+      ? t('sidebar.status.idle')
+      : tunnelStatus === 'connecting'
+        ? t('sidebar.status.connecting')
+        : tunnelStatus === 'running'
+          ? t('sidebar.status.running')
+          : t('sidebar.status.error');
 
   return (
     <aside className="shell__aside">
@@ -65,17 +76,17 @@ export const Sidebar = memo(function Sidebar() {
         <Logo size={28} />
         <div className="min-w-0 max-sm:hidden" data-tauri-drag-region>
           <div className="text-sm font-semibold tracking-tight" data-tauri-drag-region>
-            CloudPlay
+            {t('app.name')}
           </div>
           <div className="text-2xs" style={{ color: 'var(--mute)' }} data-tauri-drag-region>
-            云玩
+            {t('app.subtitle')}
           </div>
         </div>
       </div>
 
       <nav
         className="flex flex-1 flex-col px-3 max-sm:flex-none max-sm:px-0"
-        aria-label="模式"
+        aria-label={t('a11y.mode')}
       >
         <div className="mode-nav" data-mode={mode}>
           <span className="mode-nav__pill" aria-hidden />
@@ -83,16 +94,34 @@ export const Sidebar = memo(function Sidebar() {
             active={mode === 'host'}
             onClick={() => switchMode('host')}
             icon={<Server size={15} strokeWidth={1.75} />}
-            title="开服者"
-            desc="创建隧道"
+            title={t('sidebar.host')}
+            desc={t('sidebar.hostDesc')}
           />
           <ModeButton
             active={mode === 'client'}
             onClick={() => switchMode('client')}
             icon={<Users size={15} strokeWidth={1.75} />}
-            title="联机者"
-            desc="加入房间"
+            title={t('sidebar.client')}
+            desc={t('sidebar.clientDesc')}
           />
+        </div>
+
+        {/* 设置入口 */}
+        <div className="mt-2 px-1 max-sm:mt-0">
+          <button
+            type="button"
+            onClick={() => switchMode('settings')}
+            className={cn(
+              'flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm transition-colors',
+              'max-sm:px-2 max-sm:py-1.5',
+              mode === 'settings'
+                ? 'text-[var(--ink)] bg-[color-mix(in_srgb,var(--green)_9%,transparent)]'
+                : 'text-[var(--mute)] hover:text-[color-mix(in_srgb,var(--ink)_82%,var(--mute))] hover:bg-[color-mix(in_srgb,var(--ink)_3.5%,transparent)]',
+            )}
+          >
+            <SettingsIcon size={15} strokeWidth={1.75} />
+            <span className="max-sm:hidden">{t('sidebar.settings')}</span>
+          </button>
         </div>
       </nav>
 
@@ -107,7 +136,7 @@ export const Sidebar = memo(function Sidebar() {
             role="switch"
             aria-checked={theme === 'light'}
             onClick={toggle}
-            aria-label={theme === 'dark' ? '切换浅色模式' : '切换深色模式'}
+            aria-label={theme === 'dark' ? t('a11y.switchLight') : t('a11y.switchDark')}
           >
             <span className="theme-switch__track">
               <span className="theme-switch__icon theme-switch__icon--sun" aria-hidden>
@@ -136,13 +165,7 @@ export const Sidebar = memo(function Sidebar() {
               style={{ background: statusColor }}
             />
             <span style={{ color: statusColor }}>
-              {tunnelStatus === 'idle'
-                ? '待命'
-                : tunnelStatus === 'connecting'
-                  ? '连接中'
-                  : tunnelStatus === 'running'
-                    ? '运行中'
-                    : '异常'}
+              {statusLabel}
             </span>
             <span style={{ opacity: 0.35 }}>·</span>
             <span>
@@ -162,7 +185,12 @@ export const Sidebar = memo(function Sidebar() {
             </span>
           </div>
           <div className="truncate text-2xs tabular-nums" style={{ color: 'var(--mute)' }}>
-            {mode === 'host' ? 'HOST' : 'JOIN'} · :{port}
+            {mode === 'settings' ? 'SETTINGS' : mode === 'host' ? 'HOST' : 'JOIN'}
+            {port !== null && (
+              <>
+                {' '}· :{port}
+              </>
+            )}
             {hostname ? (
               <span className="ml-1" style={{ color: 'var(--green)' }}>
                 {hostname}

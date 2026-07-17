@@ -1,5 +1,6 @@
 import { memo, useCallback } from 'react';
 import { WindowControls } from './WindowControls';
+import { useI18n } from '../i18n';
 
 function isTauri(): boolean {
   return (
@@ -13,6 +14,7 @@ function isTauri(): boolean {
  * Drag to move; double-click to maximize / restore.
  */
 export const TitleBar = memo(function TitleBar() {
+  const { t } = useI18n();
   const onDoubleClick = useCallback(async () => {
     if (!isTauri()) return;
     try {
@@ -24,12 +26,12 @@ export const TitleBar = memo(function TitleBar() {
   }, []);
 
   return (
-    <header className="titlebar" aria-label="标题栏">
+    <header className="titlebar" aria-label={t('a11y.titlebar')}>
       <div
         className="titlebar__drag"
         data-tauri-drag-region
         onDoubleClick={onDoubleClick}
-        title="拖动移动窗口 · 双击最大化"
+        title={t('a11y.dragHint')}
       />
       <WindowControls />
     </header>

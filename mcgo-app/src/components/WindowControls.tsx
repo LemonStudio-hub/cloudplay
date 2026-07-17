@@ -1,5 +1,6 @@
 import { memo, useCallback, useEffect, useState } from 'react';
 import { Copy, Minus, Square, X } from 'lucide-react';
+import { useI18n } from '../i18n';
 
 function isTauri(): boolean {
   return (
@@ -24,6 +25,7 @@ const iconProps = {
 export const WindowControls = memo(function WindowControls() {
   const [maximized, setMaximized] = useState(false);
   const tauri = isTauri();
+  const { t } = useI18n();
 
   useEffect(() => {
     if (!tauri) return;
@@ -76,12 +78,12 @@ export const WindowControls = memo(function WindowControls() {
   }, [tauri]);
 
   return (
-    <div className="win-controls" role="toolbar" aria-label="窗口控制">
+    <div className="win-controls" role="toolbar" aria-label={t('a11y.windowControls')}>
       <button
         type="button"
         className="win-controls__btn"
         onClick={minimize}
-        aria-label="最小化"
+        aria-label={t('a11y.minimize')}
         tabIndex={-1}
       >
         <Minus {...iconProps} />
@@ -90,7 +92,7 @@ export const WindowControls = memo(function WindowControls() {
         type="button"
         className="win-controls__btn"
         onClick={toggleMax}
-        aria-label={maximized ? '还原' : '最大化'}
+        aria-label={maximized ? t('a11y.restore') : t('a11y.maximize')}
         tabIndex={-1}
       >
         {maximized ? <Copy {...iconProps} /> : <Square {...iconProps} />}
@@ -99,7 +101,7 @@ export const WindowControls = memo(function WindowControls() {
         type="button"
         className="win-controls__btn win-controls__btn--close"
         onClick={close}
-        aria-label="关闭"
+        aria-label={t('a11y.close')}
         tabIndex={-1}
       >
         <X {...iconProps} />

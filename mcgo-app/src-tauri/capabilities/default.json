@@ -27,6 +27,10 @@
         {
           "name": "binaries/cloudflared",
           "sidecar": true
+        },
+        {
+          "name": "binaries/CloudflareSpeedTest",
+          "sidecar": true
         }
       ]
     },
@@ -35,6 +39,10 @@
       "allow": [
         {
           "name": "binaries/cloudflared",
+          "sidecar": true
+        },
+        {
+          "name": "binaries/CloudflareSpeedTest",
           "sidecar": true
         }
       ]

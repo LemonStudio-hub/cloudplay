@@ -49,6 +49,7 @@ impl ApiClient {
     }
 
     /// Check API health
+    #[allow(dead_code)]
     pub async fn health_check(&self) -> bool {
         let url = format!("{}/api/health", self.base_url);
 

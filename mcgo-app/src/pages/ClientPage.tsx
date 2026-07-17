@@ -9,6 +9,8 @@ import {
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { CopyField } from '../components/ui/CopyField';
+import { logger } from '../lib/logger';
+import { useI18n } from '../i18n';
 
 export function ClientPage() {
   const tunnelStatus = useAppStore((s) => s.tunnelStatus);
@@ -18,6 +20,7 @@ export function ClientPage() {
   const setError = useAppStore((s) => s.setError);
   const setClientPort = useAppStore((s) => s.setClientPort);
   const setHostname = useAppStore((s) => s.setHostname);
+  const { t } = useI18n();
 
   const [serverAddress, setServerAddress] = useState('');
   const [fieldErrors, setFieldErrors] = useState<{
@@ -32,23 +35,29 @@ export function ClientPage() {
   );
 
   const handleConnect = useCallback(async () => {
-    const a = validateServerAddress(serverAddress);
-    const p = validatePort(clientPort);
+    const aKey = validateServerAddress(serverAddress);
+    const pKey = validatePort(clientPort);
+    const a = aKey ? t(aKey as any) : null;
+    const p = pKey ? t(pKey as any) : null;
     setFieldErrors({ address: a, port: p });
     if (a || p) {
+      logger.warn('app', '联机表单验证失败', { serverAddress, clientPort, addressErr: a, portErr: p });
       setError(a || p);
       setTunnelStatus('error');
       return;
     }
     const host = normalizeServerAddress(serverAddress);
+    logger.info('app', '用户发起联机连接', { serverAddress: host, clientPort });
     setHostname(host);
     setTunnelStatus('connecting');
     setError(null);
     await new Promise((r) => setTimeout(r, 900));
+    logger.info('app', '联机连接已建立', { target: `localhost:${clientPort}` });
     setTunnelStatus('running');
   }, [serverAddress, clientPort, setHostname, setTunnelStatus, setError]);
 
   const handleDisconnect = useCallback(() => {
+    logger.info('app', '用户断开联机连接');
     setTunnelStatus('idle');
     setError(null);
     setHostname(null);
@@ -69,24 +78,23 @@ export function ClientPage() {
         >
           Join mode
         </p>
-        <h2 className="mt-1 text-xl font-semibold tracking-tight">联机</h2>
+        <h2 className="mt-1 text-xl font-semibold tracking-tight">{t('client.title')}</h2>
         <p className="mt-1 text-sm" style={{ color: 'var(--mute)' }}>
-          输入好友分享的地址并接入
+          {t('client.subtitle')}
         </p>
       </header>
 
       <form onSubmit={onSubmit} className="surface p-5 space-y-4">
         <Input
           name="serverAddress"
-          label="服务器地址"
+          label={t('client.address')}
           value={serverAddress}
           onChange={(e) => {
             setServerAddress(e.target.value);
+            const addrErrKey = e.target.value.trim() ? validateServerAddress(e.target.value) : null;
             setFieldErrors((f) => ({
               ...f,
-              address: e.target.value.trim()
-                ? validateServerAddress(e.target.value)
-                : null,
+              address: addrErrKey ? t(addrErrKey as any) : null,
             }));
           }}
           onBlur={() => {
@@ -98,36 +106,37 @@ export function ClientPage() {
           autoComplete="off"
           spellCheck={false}
           error={fieldErrors.address}
-          hint="支持粘贴完整链接，会自动整理"
+          hint={t('client.addressHint')}
         />
 
         <Input
           name="clientPort"
-          label="本地代理端口"
+          label={t('client.port')}
           type="number"
           value={clientPort || ''}
           onChange={(e) => {
             const p = parseInt(e.target.value, 10);
             if (Number.isNaN(p)) {
               setClientPort(0);
-              setFieldErrors((f) => ({ ...f, port: '无效端口' }));
+              setFieldErrors((f) => ({ ...f, port: t('client.invalidPort') }));
               return;
             }
             setClientPort(p);
-            setFieldErrors((f) => ({ ...f, port: validatePort(p) }));
+            const portErrKey = validatePort(p);
+            setFieldErrors((f) => ({ ...f, port: portErrKey ? t(portErrKey as any) : null }));
           }}
           disabled={busy}
           min={1}
           max={65535}
           error={fieldErrors.port}
-          hint="默认 25566，避免与本机服务冲突"
+          hint={t('client.portHint')}
         />
 
         <div className="pt-1">
           {tunnelStatus === 'running' ? (
             <Button type="submit" variant="danger" fullWidth>
               <WifiOff size={15} />
-              断开
+              {t('client.disconnect')}
             </Button>
           ) : (
             <Button
@@ -140,12 +149,12 @@ export function ClientPage() {
               {tunnelStatus === 'connecting' ? (
                 <>
                   <Loader2 size={15} className="animate-spin" />
-                  连接中…
+                  {t('client.connecting')}
                 </>
               ) : (
                 <>
                   <Wifi size={15} />
-                  连接
+                  {t('client.connect')}
                 </>
               )}
             </Button>
@@ -168,7 +177,7 @@ export function ClientPage() {
             Connected
           </p>
           <p className="mt-1 text-sm" style={{ color: 'var(--mute)' }}>
-            在游戏中添加服务器
+            {t('client.connected')}
           </p>
           <div className="mt-3">
             <CopyField value={localTarget} />
@@ -194,9 +203,9 @@ export function ClientPage() {
         className="mt-6 space-y-2 border-t pt-5 text-2xs"
         style={{ borderColor: 'var(--line)', color: 'var(--mute)' }}
       >
-        <li>1. 粘贴开服者分享的地址</li>
-        <li>2. 连接成功后复制 localhost 地址</li>
-        <li>3. 在游戏多人模式中加入该服务器</li>
+        <li>{t('client.steps.1')}</li>
+        <li>{t('client.steps.2')}</li>
+        <li>{t('client.steps.3')}</li>
       </ol>
     </div>
   );
