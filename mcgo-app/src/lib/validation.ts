@@ -1,3 +1,5 @@
+import { DOMAIN } from './constants';
+
 const ROOM_ID_RE = /^[a-zA-Z0-9_-]{3,20}$/;
 const HOSTNAME_RE = /^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/;
 
@@ -52,6 +54,6 @@ export function validateServerAddress(address: string): string | null {
   return null;
 }
 
-export function buildHostname(roomId: string, domain = 'cloudplay.lat'): string {
+export function buildHostname(roomId: string, domain = DOMAIN): string {
   return `${roomId.trim()}.${domain}`;
 }

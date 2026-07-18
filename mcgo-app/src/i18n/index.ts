@@ -6,12 +6,13 @@
  */
 
 import { useSyncExternalStore } from 'react';
+import { STORAGE_KEYS } from '../lib/constants';
 import zh from './locales/zh';
 import en from './locales/en';
 
 export type Locale = 'zh' | 'en';
 
-const STORAGE_KEY = 'cloudplay-locale';
+const STORAGE_KEY = STORAGE_KEYS.LOCALE;
 
 const locales: Record<Locale, Record<string, string>> = { zh, en };
 

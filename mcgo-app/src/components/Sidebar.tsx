@@ -7,6 +7,7 @@ import { useTheme } from '../hooks/useTheme';
 import { useI18n } from '../i18n';
 import { healthCheck } from '../services/api';
 import { cn } from '../lib/cn';
+import { HEALTH_CHECK_INTERVAL } from '../lib/constants';
 
 export const Sidebar = memo(function Sidebar() {
   const mode = useAppStore((s) => s.mode);
@@ -28,7 +29,7 @@ export const Sidebar = memo(function Sidebar() {
       if (!dead) setApiOnline(ok);
     };
     tick();
-    const id = window.setInterval(tick, 30_000);
+    const id = window.setInterval(tick, HEALTH_CHECK_INTERVAL);
     return () => {
       dead = true;
       window.clearInterval(id);

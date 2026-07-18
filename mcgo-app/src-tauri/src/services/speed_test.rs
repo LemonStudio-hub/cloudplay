@@ -1,11 +1,26 @@
 use std::path::PathBuf;
+use std::sync::LazyLock;
+use tokio::sync::Mutex;
 use tauri::{AppHandle, Manager};
 use tauri_plugin_shell::ShellExt;
 use crate::models::SpeedTestResult;
 
+/// Global mutex to prevent concurrent speed test executions.
+static SPEED_TEST_LOCK: LazyLock<Mutex<()>> = LazyLock::new(|| Mutex::new(()));
+
+/// Maximum time to wait for the speed test to complete (120 seconds).
+const SPEED_TEST_TIMEOUT_SECS: u64 = 120;
+
 /// Run CloudflareSpeedTest and return the fastest IP result.
 /// Uses `-dd` (skip download speed test) for faster results.
+/// Protected by a global mutex — only one speed test can run at a time.
 pub async fn run_speed_test(app: &AppHandle) -> Result<SpeedTestResult, String> {
+    // Prevent concurrent speed test runs
+    let _guard = SPEED_TEST_LOCK.try_lock().map_err(|_| {
+        log::warn!("Speed test already in progress");
+        "测速正在进行中，请稍后再试".to_string()
+    })?;
+
     // Determine output path in app cache directory
     let output_dir = app.path().app_cache_dir()
         .map_err(|e| format!("获取缓存目录失败: {}", e))?;
@@ -20,29 +35,52 @@ pub async fn run_speed_test(app: &AppHandle) -> Result<SpeedTestResult, String> 
         .sidecar("CloudflareSpeedTest")
         .map_err(|e| format!("加载 CloudflareSpeedTest 失败: {}", e))?;
 
+    let output_arg = output_path.to_str()
+        .ok_or_else(|| "输出路径包含无效字符".to_string())?;
+
     // Run with -dd (latency only, no download test) and -o for output
-    let (mut rx, _child) = sidecar
-        .args([
-            "-dd",
-            "-o", output_path.to_str().unwrap_or("cfst_result.csv"),
-        ])
+    let (mut rx, child) = sidecar
+        .args(["-dd", "-o", output_arg])
         .spawn()
         .map_err(|e| format!("启动 CloudflareSpeedTest 失败: {}", e))?;
 
-    // Wait for process to complete
+    // Wait for process to complete with timeout.
+    // The child handle is kept alive in this scope — dropping it kills the process.
     use tauri_plugin_shell::process::CommandEvent;
-    while let Some(event) = rx.recv().await {
-        match event {
-            CommandEvent::Terminated(status) => {
-                if !status.code.map_or(true, |c| c == 0) {
-                    return Err(format!("CloudflareSpeedTest 退出码: {:?}", status.code));
+    let result = tokio::time::timeout(
+        std::time::Duration::from_secs(SPEED_TEST_TIMEOUT_SECS),
+        async {
+            while let Some(event) = rx.recv().await {
+                match event {
+                    CommandEvent::Terminated(status) => {
+                        if !status.code.map_or(true, |c| c == 0) {
+                            return Err(format!("CloudflareSpeedTest 退出码: {:?}", status.code));
+                        }
+                        return Ok(());
+                    }
+                    CommandEvent::Error(err) => {
+                        return Err(format!("CloudflareSpeedTest 错误: {}", err));
+                    }
+                    _ => {}
                 }
-                break;
             }
-            CommandEvent::Error(err) => {
-                return Err(format!("CloudflareSpeedTest 错误: {}", err));
-            }
-            _ => {}
+            Ok(())
+        }
+    ).await;
+
+    match result {
+        Ok(Ok(())) => {
+            // Process completed successfully — child drops naturally
+        }
+        Ok(Err(e)) => {
+            drop(child); // Kill the process
+            return Err(e);
+        }
+        Err(_) => {
+            // Timeout — drop kills the process
+            log::error!("Speed test timed out after {}s", SPEED_TEST_TIMEOUT_SECS);
+            drop(child);
+            return Err(format!("测速超时（{}秒），请检查网络连接", SPEED_TEST_TIMEOUT_SECS));
         }
     }
 
@@ -75,9 +113,18 @@ fn parse_csv_output(path: &PathBuf) -> Result<SpeedTestResult, String> {
                 "0"
             };
 
-            let loss = loss_str.parse::<f64>().unwrap_or(0.0);
-            let latency = latency_str.parse::<f64>().unwrap_or(0.0);
-            let speed = speed_str.parse::<f64>().unwrap_or(0.0);
+            let loss = loss_str.parse::<f64>().unwrap_or_else(|_| {
+                log::warn!("Failed to parse loss value: '{}'", loss_str);
+                0.0
+            });
+            let latency = latency_str.parse::<f64>().unwrap_or_else(|_| {
+                log::warn!("Failed to parse latency value: '{}'", latency_str);
+                0.0
+            });
+            let speed = speed_str.parse::<f64>().unwrap_or_else(|_| {
+                log::warn!("Failed to parse speed value: '{}'", speed_str);
+                0.0
+            });
 
             return Ok(SpeedTestResult {
                 ip,

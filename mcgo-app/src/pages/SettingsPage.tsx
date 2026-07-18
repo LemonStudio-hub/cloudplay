@@ -32,6 +32,7 @@ import { Button } from '../components/ui/Button';
 import { cn } from '../lib/cn';
 import { useI18n, setLocale } from '../i18n';
 import type { Locale } from '../i18n';
+import { STORAGE_KEYS } from '../lib/constants';
 
 /* ── 级别颜色 ── */
 
@@ -167,34 +168,47 @@ const LanguageSelector = memo(function LanguageSelector() {
 const SpeedOptimizationSection = memo(function SpeedOptimizationSection() {
   const { t, locale } = useI18n();
   const [enabled, setEnabled] = useState(() => {
-    return localStorage.getItem('cloudplay-speed-enabled') !== 'false';
+    return localStorage.getItem(STORAGE_KEYS.SPEED_ENABLED) !== 'false';
   });
   const [testing, setTesting] = useState(false);
   const [currentIp, setCurrentIp] = useState<string | null>(null);
   const [lastResult, setLastResult] = useState<SpeedTestResult | null>(() => {
-    const saved = localStorage.getItem('cloudplay-speed-result');
-    return saved ? JSON.parse(saved) : null;
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.SPEED_RESULT);
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
   });
   const [lastTestTime, setLastTestTime] = useState<number>(() => {
-    const saved = localStorage.getItem('cloudplay-speed-time');
-    return saved ? parseInt(saved, 10) : 0;
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.SPEED_TIME);
+      return saved ? parseInt(saved, 10) : 0;
+    } catch {
+      return 0;
+    }
   });
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let dead = false;
     getSpeedStatus().then((status) => {
+      if (dead) return;
       setCurrentIp(status.currentIp);
       if (status.enabled && !enabled) {
         setEnabled(true);
-        localStorage.setItem('cloudplay-speed-enabled', 'true');
+        localStorage.setItem(STORAGE_KEYS.SPEED_ENABLED, 'true');
       }
+    }).catch(() => {
+      // Tauri 环境不可用时静默处理
     });
+    return () => { dead = true; };
   }, []);
 
   const handleToggle = useCallback(async () => {
     const next = !enabled;
     setEnabled(next);
-    localStorage.setItem('cloudplay-speed-enabled', String(next));
+    localStorage.setItem(STORAGE_KEYS.SPEED_ENABLED, String(next));
 
     if (next && lastResult) {
       try {
@@ -204,7 +218,7 @@ const SpeedOptimizationSection = memo(function SpeedOptimizationSection() {
       } catch (e) {
         setError(e instanceof Error ? e.message : t('settings.applyFailed'));
         setEnabled(false);
-        localStorage.setItem('cloudplay-speed-enabled', 'false');
+        localStorage.setItem(STORAGE_KEYS.SPEED_ENABLED, 'false');
       }
     } else if (!next) {
       try {
@@ -225,8 +239,8 @@ const SpeedOptimizationSection = memo(function SpeedOptimizationSection() {
       setLastResult(result);
       const now = Date.now();
       setLastTestTime(now);
-      localStorage.setItem('cloudplay-speed-result', JSON.stringify(result));
-      localStorage.setItem('cloudplay-speed-time', String(now));
+      localStorage.setItem(STORAGE_KEYS.SPEED_RESULT, JSON.stringify(result));
+      localStorage.setItem(STORAGE_KEYS.SPEED_TIME, String(now));
 
       if (enabled) {
         await applySpeedOptimization(result.ip);

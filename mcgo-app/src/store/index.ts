@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { AppMode, TunnelStatus } from '../types';
 import { logger } from '../lib/logger';
+import { DEFAULT_LOCAL_PORT, DEFAULT_CLIENT_PORT } from '../lib/constants';
 
 interface AppState {
   mode: AppMode;
@@ -29,8 +30,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   tunnelStatus: 'idle',
   hostname: null,
   error: null,
-  localPort: 25565,
-  clientPort: 25566,
+  localPort: DEFAULT_LOCAL_PORT,
+  clientPort: DEFAULT_CLIENT_PORT,
   apiOnline: null,
   cloudflaredReady: null,
 
@@ -67,8 +68,3 @@ export const useAppStore = create<AppState>((set, get) => ({
     return s === 'running' || s === 'connecting';
   },
 }));
-
-/** Selectors to minimize re-renders */
-export const selectMode = (s: AppState) => s.mode;
-export const selectTunnelStatus = (s: AppState) => s.tunnelStatus;
-export const selectError = (s: AppState) => s.error;

@@ -1,6 +1,6 @@
 [package]
 name = "cloudplay-app"
-version = "1.1.0"
+version = "1.1.1"
 edition = "2021"
 authors = ["CloudPlay Team <team@cloudplay.lat>"]
 description = "CloudPlay - 局域网游戏远程联机 Desktop Client"
@@ -21,8 +21,6 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tokio = { version = "1", features = ["full"] }
 reqwest = { version = "0.12", features = ["json"] }
-anyhow = "1"
-keyring = "3"
 log = "0.4"
 env_logger = "0.11"
 tauri-plugin-shell = "2"

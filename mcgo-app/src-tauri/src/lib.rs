@@ -11,7 +11,15 @@ use tokio::sync::Mutex;
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let tunnel_manager = TunnelManager::new();
-    let api_client = ApiClient::new("https://api.cloudplay.lat".to_string());
+    let api_client = match ApiClient::new("https://api.cloudplay.lat".to_string()) {
+        Ok(client) => client,
+        Err(e) => {
+            eprintln!("Failed to initialize API client: {}", e);
+            // Continue with a degraded state — tunnel features will fail but app can still open
+            // Create a client that will fail on use
+            ApiClient::new_force("https://api.cloudplay.lat".to_string())
+        }
+    };
 
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
@@ -34,6 +42,22 @@ pub fn run() {
                     }
                     Err(e) => log::warn!("icon decode failed: {e}"),
                 }
+
+                // Graceful shutdown: kill cloudflared sidecar when window is destroyed
+                let tunnel_mgr = app.state::<AppState>().tunnel_manager.clone();
+                let app_handle = app.handle().clone();
+                win.on_window_event(move |event| {
+                    if let tauri::WindowEvent::Destroyed = event {
+                        log::info!("Window destroyed, cleaning up tunnel");
+                        let mgr = tunnel_mgr.clone();
+                        let handle = app_handle.clone();
+                        tokio::spawn(async move {
+                            if let Err(e) = mgr.stop(&handle).await {
+                                log::error!("Failed to stop tunnel on shutdown: {}", e);
+                            }
+                        });
+                    }
+                });
             }
             Ok(())
         })
@@ -48,5 +72,8 @@ pub fn run() {
             commands::speed::get_speed_status,
         ])
         .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .unwrap_or_else(|e| {
+            eprintln!("Application failed to start: {}", e);
+            std::process::exit(1);
+        });
 }

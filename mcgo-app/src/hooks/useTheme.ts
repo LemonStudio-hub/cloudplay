@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useSyncExternalStore } from 'react';
 import { applyWindowIcon } from '../lib/appIcon';
+import { STORAGE_KEYS } from '../lib/constants';
 
 export type Theme = 'dark' | 'light';
 
-const KEY = 'cloudplay-theme';
+const KEY = STORAGE_KEYS.THEME;
 const listeners = new Set<() => void>();
 
 function readTheme(): Theme {

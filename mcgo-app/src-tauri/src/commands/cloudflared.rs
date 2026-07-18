@@ -11,6 +11,9 @@ pub async fn check_cloudflared(app: AppHandle) -> Result<bool, String> {
 
     match sidecar.args(["version"]).output().await {
         Ok(output) => Ok(output.status.success()),
-        Err(_) => Ok(false),
+        Err(e) => {
+            log::warn!("cloudflared version check failed: {}", e);
+            Ok(false)
+        }
     }
 }

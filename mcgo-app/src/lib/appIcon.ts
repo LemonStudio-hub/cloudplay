@@ -1,12 +1,6 @@
 import type { Theme } from '../hooks/useTheme';
 import { EMBEDDED_ICONS } from './embeddedIcons';
-
-function isTauri(): boolean {
-  return (
-    typeof window !== 'undefined' &&
-    ('__TAURI_INTERNALS__' in window || '__TAURI__' in window)
-  );
-}
+import { isTauri } from './tauri';
 
 function b64ToBytes(b64: string): Uint8Array {
   const bin = atob(b64);

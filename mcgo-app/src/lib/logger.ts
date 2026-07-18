@@ -5,6 +5,8 @@
  * 环形缓冲区存储最近 500 条，支持按级别/分类筛选。
  */
 
+import { MAX_LOG_ENTRIES } from './constants';
+
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 export type LogCategory = 'app' | 'tunnel' | 'api' | 'system';
 
@@ -18,8 +20,6 @@ export interface LogEntry {
 }
 
 type Listener = () => void;
-
-const MAX_ENTRIES = 500;
 
 const LEVEL_ORDER: Record<LogLevel, number> = {
   debug: 0,
@@ -109,8 +109,8 @@ class Logger {
     this._entries.push(entry);
 
     // 环形缓冲区：超出上限时淘汰最旧的
-    if (this._entries.length > MAX_ENTRIES) {
-      this._entries = this._entries.slice(-MAX_ENTRIES);
+    if (this._entries.length > MAX_LOG_ENTRIES) {
+      this._entries = this._entries.slice(-MAX_LOG_ENTRIES);
     }
 
     this._emit();

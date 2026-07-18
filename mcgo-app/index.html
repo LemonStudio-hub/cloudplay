@@ -16,6 +16,8 @@
             ? s
             : (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
           document.documentElement.setAttribute('data-theme', t);
+          document.documentElement.style.backgroundColor = t === 'light' ? '#f3f7f4' : '#060908';
+          document.documentElement.style.colorScheme = t;
         } catch (e) {}
       })();
     </script>

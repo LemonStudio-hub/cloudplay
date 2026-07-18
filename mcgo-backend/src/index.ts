@@ -2,6 +2,12 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { rateLimiter } from './middleware/rate-limiter';
 
+interface CloudflareApiResponse<T = unknown> {
+  success: boolean;
+  result: T;
+  errors?: Array<{ code: number; message: string }>;
+}
+
 type Bindings = {
   KV_STORE: KVNamespace;
   CF_API_ACCOUNT_ID: string;
@@ -10,6 +16,18 @@ type Bindings = {
 };
 
 const app = new Hono<{ Bindings: Bindings }>();
+
+// Security headers middleware
+app.use('*', async (c, next) => {
+  await next();
+  c.header('X-Content-Type-Options', 'nosniff');
+  c.header('X-Frame-Options', 'DENY');
+  c.header('Referrer-Policy', 'strict-origin-when-cross-origin');
+  c.header('X-XSS-Protection', '1; mode=block');
+  if (c.req.url.startsWith('https://')) {
+    c.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
+});
 
 // CORS configuration
 app.use('*', cors({
@@ -61,7 +79,7 @@ app.post('/api/token', async (c) => {
       }
     );
 
-    const data = await resp.json() as any;
+    const data: CloudflareApiResponse<string> = await resp.json();
 
     if (!resp.ok || !data.success) {
       console.error('Cloudflare API error:', JSON.stringify(data.errors));

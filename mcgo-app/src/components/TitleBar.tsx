@@ -1,13 +1,7 @@
 import { memo, useCallback } from 'react';
 import { WindowControls } from './WindowControls';
 import { useI18n } from '../i18n';
-
-function isTauri(): boolean {
-  return (
-    typeof window !== 'undefined' &&
-    ('__TAURI_INTERNALS__' in window || '__TAURI__' in window)
-  );
-}
+import { isTauri } from '../lib/tauri';
 
 /**
  * Full-width transparent title strip, flush with window controls.

@@ -2,12 +2,33 @@ use tauri::{AppHandle, Emitter, State};
 use crate::models::{AppState, LogEntryPayload, StartTunnelRequest, StartTunnelResponse};
 use crate::services::port_scanner::is_port_available;
 
+/// Validate room ID format: 3-20 characters, alphanumeric, underscores, hyphens.
+fn validate_room_id(room_id: &str) -> Result<(), String> {
+    if room_id.len() < 3 || room_id.len() > 20 {
+        return Err("房间 ID 长度需在 3-20 个字符之间".to_string());
+    }
+    if !room_id.chars().all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-') {
+        return Err("房间 ID 仅支持字母、数字、下划线和连字符".to_string());
+    }
+    Ok(())
+}
+
 #[tauri::command]
 pub async fn start_tunnel(
     app: AppHandle,
     state: State<'_, AppState>,
     request: StartTunnelRequest,
 ) -> Result<StartTunnelResponse, String> {
+    // Validate room_id on the server side
+    if let Err(e) = validate_room_id(&request.room_id) {
+        log::warn!("Invalid room_id: {}", e);
+        return Ok(StartTunnelResponse {
+            success: false,
+            hostname: None,
+            error: Some(e),
+        });
+    }
+
     log::info!("Starting tunnel for room: {}, port: {}", request.room_id, request.local_port);
     let _ = app.emit("log://entry", LogEntryPayload::info(
         "tunnel",

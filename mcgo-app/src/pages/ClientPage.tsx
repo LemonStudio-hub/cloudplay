@@ -11,6 +11,7 @@ import { Input } from '../components/ui/Input';
 import { CopyField } from '../components/ui/CopyField';
 import { logger } from '../lib/logger';
 import { useI18n } from '../i18n';
+import { DEFAULT_CLIENT_PORT } from '../lib/constants';
 
 export function ClientPage() {
   const tunnelStatus = useAppStore((s) => s.tunnelStatus);
@@ -30,31 +31,38 @@ export function ClientPage() {
 
   const busy = tunnelStatus === 'running' || tunnelStatus === 'connecting';
   const localTarget = useMemo(
-    () => `localhost:${clientPort || 25566}`,
+    () => `localhost:${clientPort || DEFAULT_CLIENT_PORT}`,
     [clientPort],
   );
 
   const handleConnect = useCallback(async () => {
-    const aKey = validateServerAddress(serverAddress);
-    const pKey = validatePort(clientPort);
-    const a = aKey ? t(aKey as any) : null;
-    const p = pKey ? t(pKey as any) : null;
-    setFieldErrors({ address: a, port: p });
-    if (a || p) {
-      logger.warn('app', '联机表单验证失败', { serverAddress, clientPort, addressErr: a, portErr: p });
-      setError(a || p);
+    try {
+      const aKey = validateServerAddress(serverAddress);
+      const pKey = validatePort(clientPort);
+      const a = aKey ? t(aKey as any) : null;
+      const p = pKey ? t(pKey as any) : null;
+      setFieldErrors({ address: a, port: p });
+      if (a || p) {
+        logger.warn('app', '联机表单验证失败', { serverAddress, clientPort, addressErr: a, portErr: p });
+        setError(a || p);
+        setTunnelStatus('error');
+        return;
+      }
+      const host = normalizeServerAddress(serverAddress);
+      logger.info('app', '用户发起联机连接', { serverAddress: host, clientPort });
+      setHostname(host);
+      setTunnelStatus('connecting');
+      setError(null);
+      await new Promise((r) => setTimeout(r, 900));
+      logger.info('app', '联机连接已建立', { target: `localhost:${clientPort}` });
+      setTunnelStatus('running');
+    } catch (e) {
+      const errMsg = e instanceof Error ? e.message : t('client.invalidPort');
+      logger.error('app', '联机连接异常', { error: errMsg });
+      setError(errMsg);
       setTunnelStatus('error');
-      return;
     }
-    const host = normalizeServerAddress(serverAddress);
-    logger.info('app', '用户发起联机连接', { serverAddress: host, clientPort });
-    setHostname(host);
-    setTunnelStatus('connecting');
-    setError(null);
-    await new Promise((r) => setTimeout(r, 900));
-    logger.info('app', '联机连接已建立', { target: `localhost:${clientPort}` });
-    setTunnelStatus('running');
-  }, [serverAddress, clientPort, setHostname, setTunnelStatus, setError]);
+  }, [serverAddress, clientPort, setHostname, setTunnelStatus, setError, t]);
 
   const handleDisconnect = useCallback(() => {
     logger.info('app', '用户断开联机连接');

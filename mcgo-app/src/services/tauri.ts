@@ -52,17 +52,6 @@ export async function stopTunnel(): Promise<{ success: boolean; error?: string }
   }
 }
 
-export async function checkPortAvailable(port: number): Promise<boolean> {
-  try {
-    const available = await invoke<boolean>('check_port', { port });
-    logger.debug('tunnel', `Port ${port}: ${available ? 'available' : 'in use'}`);
-    return available;
-  } catch (error) {
-    logger.warn('tunnel', 'Port check failed', { port, error: String(error) });
-    return false;
-  }
-}
-
 export async function checkCloudflared(): Promise<boolean> {
   try {
     const ready = await invoke<boolean>('check_cloudflared');

@@ -8,14 +8,25 @@ pub struct ApiClient {
 }
 
 impl ApiClient {
-    pub fn new(base_url: String) -> Self {
+    pub fn new(base_url: String) -> Result<Self, String> {
         let client = Client::builder()
             .timeout(Duration::from_secs(15))
             .build()
-            .expect("Failed to create HTTP client");
-        Self {
+            .map_err(|e| {
+                log::error!("Failed to create HTTP client: {}", e);
+                format!("创建 HTTP 客户端失败: {}", e)
+            })?;
+        Ok(Self {
             base_url,
             client,
+        })
+    }
+
+    /// Create a client with default settings (used as fallback when `new` fails).
+    pub fn new_force(base_url: String) -> Self {
+        Self {
+            base_url,
+            client: Client::new(),
         }
     }
 
@@ -39,6 +50,7 @@ impl ApiClient {
         if !response.status().is_success() {
             let status = response.status();
             let error_text = response.text().await.unwrap_or_default();
+            log::error!("API error ({}): {}", status, error_text);
             return Err(format!("API 错误 ({}): {}", status, error_text));
         }
 

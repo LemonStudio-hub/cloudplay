@@ -4,6 +4,7 @@ use tauri::{AppHandle, Emitter};
 use tauri_plugin_shell::{ShellExt, process::CommandChild};
 use crate::models::LogEntryPayload;
 
+#[derive(Clone)]
 pub struct TunnelManager {
     child: Arc<Mutex<Option<CommandChild>>>,
 }
@@ -15,9 +16,12 @@ impl TunnelManager {
         }
     }
 
-    /// Start tunnel with token using Tauri sidecar
+    /// Start tunnel with token using Tauri sidecar.
+    /// Acquires the lock FIRST to prevent TOCTOU race conditions.
     pub async fn start_with_token(&self, app: &AppHandle, token: &str) -> Result<(), String> {
-        if self.is_running().await {
+        // Acquire lock before checking — prevents two concurrent starts
+        let mut guard = self.child.lock().await;
+        if guard.is_some() {
             return Err("隧道已在运行中".to_string());
         }
 
@@ -33,10 +37,11 @@ impl TunnelManager {
                 "启动 cloudflared 失败，请确认应用完整性".to_string()
             })?;
 
-        // Clone app handle for the log-emitting task
+        // Share child handle with the monitoring task so it can clear it on termination
+        let child_handle = Arc::clone(&self.child);
         let app_handle = app.clone();
 
-        // 监听 sidecar 输出，同时 emit 到前端
+        // Monitor sidecar output and emit to frontend
         tokio::spawn(async move {
             use tauri_plugin_shell::process::CommandEvent;
             while let Some(event) = rx.recv().await {
@@ -58,6 +63,9 @@ impl TunnelManager {
                         log::info!("[cloudflared] {}", msg);
                         let _ = app_handle.emit("log://entry",
                             LogEntryPayload::info("tunnel", &msg));
+                        // Clear the child handle so is_running() returns false
+                        let mut guard = child_handle.lock().await;
+                        *guard = None;
                         break;
                     }
                     CommandEvent::Error(err) => {
@@ -70,12 +78,11 @@ impl TunnelManager {
             }
         });
 
-        let mut guard = self.child.lock().await;
         *guard = Some(child);
         Ok(())
     }
 
-    /// Stop tunnel
+    /// Stop tunnel and wait for the process to terminate.
     pub async fn stop(&self, app: &AppHandle) -> Result<(), String> {
         let mut guard = self.child.lock().await;
         if let Some(child) = guard.take() {
@@ -87,7 +94,9 @@ impl TunnelManager {
         Ok(())
     }
 
-    /// Check if tunnel is running
+    /// Check if tunnel is running.
+    /// Relies on the monitoring task clearing the handle on termination,
+    /// so this correctly returns `false` for dead processes.
     pub async fn is_running(&self) -> bool {
         let guard = self.child.lock().await;
         guard.is_some()

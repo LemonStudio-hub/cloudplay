@@ -3,6 +3,22 @@ use std::path::PathBuf;
 const MARKER_START: &str = "# >>> CloudPlay Speed Optimizer";
 const MARKER_END: &str = "# <<< CloudPlay Speed Optimizer";
 
+/// Validate that the input is a well-formed IPv4 or IPv6 address.
+/// Rejects any string containing newlines, spaces, or shell metacharacters.
+fn validate_ip(ip: &str) -> Result<(), String> {
+    if ip.is_empty() || ip.len() > 45 {
+        return Err("IP 地址长度无效".to_string());
+    }
+    // Reject any characters that could be used for injection
+    if ip.contains(|c: char| c.is_control() || c == '\n' || c == '\r' || c == ' ' || c == '\t') {
+        return Err("IP 地址包含非法字符".to_string());
+    }
+    // Parse as std::net::IpAddr for strict validation
+    ip.parse::<std::net::IpAddr>()
+        .map_err(|_| format!("无效的 IP 地址: {}", ip))?;
+    Ok(())
+}
+
 /// Domains to optimize for Cloudflare connections
 const CLOUDFLARE_DOMAINS: &[&str] = &[
     "cloudplay.lat",
@@ -24,8 +40,11 @@ fn hosts_path() -> PathBuf {
 /// Read the hosts file content.
 fn read_hosts() -> Result<String, String> {
     let path = hosts_path();
-    std::fs::read_to_string(&path)
-        .map_err(|e| format!("读取 hosts 文件失败: {}", e))
+    std::fs::read_to_string(&path).map_err(|e| {
+        let msg = format!("读取 hosts 文件失败: {}", e);
+        log::error!("{}", msg);
+        msg
+    })
 }
 
 /// Remove existing CloudPlay entries from hosts content.
@@ -92,26 +111,27 @@ fn write_hosts_elevated(content: &str) -> Result<(), String> {
     #[cfg(target_os = "linux")]
     {
         // Try pkexec first, fallback to sudo
-        let temp_file = "/tmp/cloudplay_hosts_temp";
-        std::fs::write(temp_file, content)
+        // Use a unique temp file name to avoid symlink attacks
+        let temp_file = format!("/tmp/.cloudplay_hosts_{}", std::process::id());
+        std::fs::write(&temp_file, content)
             .map_err(|e| format!("写入临时文件失败: {}", e))?;
 
         let result = std::process::Command::new("pkexec")
-            .args(["cp", temp_file, &path_str])
+            .args(["cp", &temp_file, &path_str])
             .status();
 
         match result {
             Ok(status) if status.success() => {
-                let _ = std::fs::remove_file(temp_file);
+                let _ = std::fs::remove_file(&temp_file);
                 return Ok(());
             }
             _ => {
                 // Fallback to sudo
                 let status = std::process::Command::new("sudo")
-                    .args(["cp", temp_file, &path_str])
+                    .args(["cp", &temp_file, &path_str])
                     .status()
                     .map_err(|e| format!("执行 sudo 失败: {}", e))?;
-                let _ = std::fs::remove_file(temp_file);
+                let _ = std::fs::remove_file(&temp_file);
                 if !status.success() {
                     return Err("需要管理员权限来修改 hosts 文件".to_string());
                 }
@@ -142,6 +162,7 @@ fn write_hosts_elevated(content: &str) -> Result<(), String> {
 
 /// Apply speed optimization: write the fastest IP to hosts file.
 pub fn apply_optimization(ip: &str) -> Result<(), String> {
+    validate_ip(ip)?;
     let content = read_hosts()?;
     let cleaned = remove_existing_entries(&content);
     let entries = generate_entries(ip);

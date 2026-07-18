@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import './styles/globals.css';
 import { bootstrapTheme } from './hooks/useTheme';
 import { bootstrapI18n } from './i18n';
@@ -21,6 +22,8 @@ if (!el) throw new Error('#root missing');
 
 createRoot(el).render(
   <StrictMode>
-    <App />
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
   </StrictMode>,
 );

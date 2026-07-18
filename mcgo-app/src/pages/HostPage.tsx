@@ -45,6 +45,8 @@ export function HostPage() {
     let dead = false;
     checkCloudflared().then((ok) => {
       if (!dead) setCloudflaredReady(ok);
+    }).catch(() => {
+      // Tauri 环境不可用时静默处理
     });
     return () => {
       dead = true;
@@ -84,12 +86,18 @@ export function HostPage() {
 
   const handleStop = useCallback(async () => {
     logger.info('app', '用户点击停止隧道');
-    const res = await stopTunnel();
-    if (!res.success) {
-      setError(res.error || t('host.stopFailed'));
-      return;
+    try {
+      const res = await stopTunnel();
+      if (!res.success) {
+        setError(res.error || t('host.stopFailed'));
+        return;
+      }
+      resetTunnel();
+    } catch (e) {
+      const errMsg = e instanceof Error ? e.message : t('host.stopFailed');
+      logger.error('app', '停止隧道异常', { error: errMsg });
+      setError(errMsg);
     }
-    resetTunnel();
   }, [resetTunnel, setError, t]);
 
   const onSubmit = (e: FormEvent) => {

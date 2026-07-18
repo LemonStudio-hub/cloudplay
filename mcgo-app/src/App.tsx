@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect } from 'react';
 import { useAppStore } from './store';
 import { Sidebar } from './components/Sidebar';
 import { TitleBar } from './components/TitleBar';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import type { AppMode } from './types';
 
 const HostPage = lazy(() =>
@@ -38,21 +39,27 @@ function PageStack({ mode }: { mode: AppMode }) {
         data-page="host"
         aria-hidden={mode !== 'host'}
       >
-        <HostPage />
+        <ErrorBoundary>
+          <HostPage />
+        </ErrorBoundary>
       </div>
       <div
         className="page-panel"
         data-page="client"
         aria-hidden={mode !== 'client'}
       >
-        <ClientPage />
+        <ErrorBoundary>
+          <ClientPage />
+        </ErrorBoundary>
       </div>
       <div
         className="page-panel"
         data-page="settings"
         aria-hidden={mode !== 'settings'}
       >
-        <SettingsPage />
+        <ErrorBoundary>
+          <SettingsPage />
+        </ErrorBoundary>
       </div>
     </div>
   );

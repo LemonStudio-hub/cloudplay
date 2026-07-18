@@ -1,13 +1,7 @@
 import { memo, useCallback, useEffect, useState } from 'react';
 import { Copy, Minus, Square, X } from 'lucide-react';
 import { useI18n } from '../i18n';
-
-function isTauri(): boolean {
-  return (
-    typeof window !== 'undefined' &&
-    ('__TAURI_INTERNALS__' in window || '__TAURI__' in window)
-  );
-}
+import { isTauri } from '../lib/tauri';
 
 async function getAppWindow() {
   const { getCurrentWindow } = await import('@tauri-apps/api/window');
